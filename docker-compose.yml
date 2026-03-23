@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: facturin-db
+    environment:
+      POSTGRES_USER: facturin
+      POSTGRES_PASSWORD: facturin
+      POSTGRES_DB: facturin
+    ports:
+      - '5432:5432'
+    volumes:
+      - facturin_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U facturin']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: facturin-api
+    environment:
+      DATABASE_URL: postgresql://facturin:facturin@db:5432/facturin
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@facturin.local}
+      SUPER_ADMIN_PASSWORD_HASH: ${SUPER_ADMIN_PASSWORD_HASH:-}
+      OSE_SUNAT_USERNAME: ${OSE_SUNAT_USERNAME:-}
+      OSE_SUNAT_PASSWORD: ${OSE_SUNAT_PASSWORD:-}
+    ports:
+      - '3001:3001'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  inngest:
+    image: inngest/inngest:latest
+    container_name: facturin-inngest
+    environment:
+      DATABASE_URL: postgresql://facturin:facturin@db:5432/facturin
+      INNGEST_REGION: us-east-1
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
+    ports:
+      - '8288:8288'
+    depends_on:
+      - db
+
+volumes:
+  facturin_data:
