@@ -17,8 +17,8 @@ export interface AdminRequestContext {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const adminAuthMiddleware = (app: any) =>
   app.onBeforeHandle(async ({ headers, path, store, jwt }: any) => {
-    // Skip auth for public paths
-    const publicPaths = ['/api/health', '/api/auth/login', '/swagger', '/api/inngest'];
+    // Skip auth for public paths and v1 routes (v1 uses API Key auth, not JWT)
+    const publicPaths = ['/api/health', '/api/auth/login', '/swagger', '/api/inngest', '/api/v1'];
     if (publicPaths.some((p) => path.startsWith(p))) {
       return;
     }
