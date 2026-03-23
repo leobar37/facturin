@@ -8,6 +8,7 @@ import { adminApiKeysRoutes } from './routes/admin/api-keys';
 import { adminTenantsRoutes } from './routes/admin/tenants';
 import { v1SeriesRoutes } from './routes/v1/series';
 import { v1TenantReadinessRoutes } from './routes/v1/tenant-readiness';
+import { v1ComprobantesRoutes } from './routes/v1/comprobantes';
 import { healthRoutes } from './routes/health';
 
 import { authMiddleware } from './middleware/auth';
@@ -54,6 +55,7 @@ const app: any = new Elysia()
   .use(authMiddleware)
   .use(v1SeriesRoutes)
   .use(v1TenantReadinessRoutes)
+  .use(v1ComprobantesRoutes)
   // Start server
   .listen(3001, ({ hostname, port }) => {
     console.log(`🚀 Facturin API running at http://${hostname}:${port}`);
