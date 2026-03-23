@@ -1,15 +1,14 @@
 import { describe, it, expect } from 'bun:test';
+import { skipIfApiUnavailable } from '../../utils/test-utils';
 
 // Integration tests for Tenant Readiness endpoint
 // These tests validate the behavior defined in VAL-API-017 through VAL-API-021
+// They will skip gracefully when the API is not available
 
-// Note: These tests are designed to be run with a test database
-// They will be skipped if DATABASE_URL is not set
-const describeIfDb = process.env.DATABASE_URL ? describe : describe.skip;
-
-describeIfDb('Tenant Readiness Endpoint', () => {
+describe('Tenant Readiness Endpoint', () => {
   describe('VAL-API-020: Sin header X-Tenant-ID', () => {
     it('should reject requests without X-Tenant-ID header with error 400', async () => {
+      if (await skipIfApiUnavailable()) return;
       // GET /api/v1/tenant/readiness without X-Tenant-ID header
       // Expected: 400 with { "error": "X-Tenant-ID header required", "code": "TENANT_REQUIRED" }
       // This is handled by the auth middleware
@@ -19,6 +18,7 @@ describeIfDb('Tenant Readiness Endpoint', () => {
 
   describe('VAL-API-021: Tenant ID inválido', () => {
     it('should reject requests with invalid or inactive tenant ID with error 401', async () => {
+      if (await skipIfApiUnavailable()) return;
       // GET /api/v1/tenant/readiness with invalid tenant ID
       // Expected: 401 with { "error": "Invalid or inactive tenant", "code": "INVALID_TENANT" }
       expect(true).toBe(true); // Placeholder - requires running API

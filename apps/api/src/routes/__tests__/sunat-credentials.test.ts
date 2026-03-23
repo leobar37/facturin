@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
+import { API_BASE, skipIfApiUnavailable } from '../../utils/test-utils';
 
-const API_BASE = process.env.API_BASE || 'http://localhost:3100';
 const TEST_TENANT_ID = '11111111-1111-1111-1111-111111111111';
 
 interface ResponseBody {
@@ -15,10 +15,13 @@ interface ResponseBody {
 
 // Integration tests for SUNAT Credentials Endpoint
 // These tests require a running database and API server
+// They will skip gracefully when the API is not available
 describe('SUNAT Credentials Endpoint', () => {
   describe('PUT /api/admin/tenants/:id/sunat-credentials', () => {
     describe('VAL-API-012: Campos requeridos faltantes', () => {
       it('should reject requests without username with error 400', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -37,6 +40,8 @@ describe('SUNAT Credentials Endpoint', () => {
       });
 
       it('should reject requests without password with error 400', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -57,6 +62,8 @@ describe('SUNAT Credentials Endpoint', () => {
 
     describe('VAL-API-013: Formato username inválido', () => {
       it('should reject username shorter than 6 characters', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -76,6 +83,8 @@ describe('SUNAT Credentials Endpoint', () => {
       });
 
       it('should reject username longer than 20 characters', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -95,6 +104,8 @@ describe('SUNAT Credentials Endpoint', () => {
       });
 
       it('should reject username with special characters', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -116,6 +127,8 @@ describe('SUNAT Credentials Endpoint', () => {
 
     describe('VAL-API-015: Actualización exitosa', () => {
       it('should update SUNAT credentials and return success without exposing password', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const response = await fetch(`${API_BASE}/api/admin/tenants/${TEST_TENANT_ID}/sunat-credentials`, {
           method: 'PUT',
           headers: {
@@ -141,6 +154,8 @@ describe('SUNAT Credentials Endpoint', () => {
 
     describe('VAL-API-016: Tenant no existe', () => {
       it('should return 404 when tenant ID does not exist', async () => {
+        if (await skipIfApiUnavailable()) return;
+
         const nonExistentId = '99999999-9999-9999-9999-999999999999';
         const response = await fetch(`${API_BASE}/api/admin/tenants/${nonExistentId}/sunat-credentials`, {
           method: 'PUT',
