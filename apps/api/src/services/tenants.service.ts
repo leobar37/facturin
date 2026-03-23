@@ -279,6 +279,56 @@ export class TenantsService {
       expiresAt: expiresAt.toISOString().split('T')[0],
     };
   }
+
+  /**
+   * Validate SUNAT username format (6-20 alphanumeric characters)
+   */
+  validateSunatUsername(username: string): boolean {
+    // Username must be 6-20 alphanumeric characters
+    const usernameRegex = /^[A-Za-z0-9]{6,20}$/;
+    return usernameRegex.test(username);
+  }
+
+  /**
+   * Update SUNAT credentials for a tenant
+   * Username is stored as-is, password is encrypted
+   */
+  async updateSunatCredentials(
+    tenantId: string,
+    username: string,
+    password: string
+  ): Promise<{ success: boolean; message: string; hasCredentials: boolean }> {
+    // Validate required fields
+    if (!username || !password) {
+      throw new ValidationError('SUNAT username and password are required', 'SUNAT_CREDENTIALS_REQUIRED');
+    }
+
+    // Validate username format
+    if (!this.validateSunatUsername(username)) {
+      throw new ValidationError('Invalid SUNAT username format', 'INVALID_SUNAT_USERNAME');
+    }
+
+    // Check if tenant exists
+    const tenant = await tenantsRepository.findById(tenantId);
+    if (!tenant) {
+      throw new ValidationError('Tenant not found', 'NOT_FOUND');
+    }
+
+    // Encrypt the password before storing
+    const encryptedPassword = encryptData(password);
+
+    // Update the tenant with the SUNAT credentials
+    await tenantsRepository.updateSunatCredentials(tenantId, {
+      sunatUsername: username,
+      sunatPassword: encryptedPassword,
+    });
+
+    return {
+      success: true,
+      message: 'SUNAT credentials updated',
+      hasCredentials: true,
+    };
+  }
 }
 
 // Singleton instance

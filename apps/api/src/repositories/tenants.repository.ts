@@ -160,6 +160,22 @@ export class TenantsRepository {
     return result ? mapToTenantEntity(result) : null;
   }
 
+  async updateSunatCredentials(
+    id: string,
+    data: { sunatUsername: string; sunatPassword: string }
+  ): Promise<TenantEntity | null> {
+    const [result] = await db
+      .update(tenants)
+      .set({ 
+        sunatUsername: data.sunatUsername,
+        sunatPassword: data.sunatPassword,
+        updatedAt: new Date() 
+      })
+      .where(eq(tenants.id, id))
+      .returning();
+    return result ? mapToTenantEntity(result) : null;
+  }
+
   async delete(id: string): Promise<boolean> {
     const [result] = await db
       .delete(tenants)

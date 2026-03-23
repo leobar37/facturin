@@ -168,4 +168,28 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
       certificate: t.String({ minLength: 1 }),
       password: t.String({ minLength: 1 }),
     }),
+  })
+  // Update SUNAT credentials for tenant
+  .put('/:id/sunat-credentials', async ({ params, body }) => {
+    const { id } = params;
+    const data = body as {
+      username: string;
+      password: string;
+    };
+
+    const result = await tenantsService.updateSunatCredentials(
+      id,
+      data.username,
+      data.password
+    );
+
+    return result;
+  }, {
+    params: t.Object({
+      id: t.String({ format: 'uuid' }),
+    }),
+    body: t.Object({
+      username: t.String({ minLength: 1 }),
+      password: t.String({ minLength: 1 }),
+    }),
   });
