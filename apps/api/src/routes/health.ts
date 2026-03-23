@@ -4,7 +4,7 @@ import { db } from '../db';
 
 export const healthRoutes = new Elysia({ prefix: '/api' })
   .get('/health', async () => {
-    let databaseStatus: 'connected' | 'disconnected' = 'disconnected';
+    let databaseStatus: 'connected' | 'disconnected';
     
     try {
       // Test database connection with a simple query

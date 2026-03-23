@@ -79,7 +79,7 @@ export class TenantsService {
   }
 
   toSafeResponse(tenant: TenantEntity): TenantResponse {
-    const { certificadoDigital, certificadoPassword, sunatPassword, ...safeData } = tenant;
+    const { certificadoDigital, sunatPassword, ...safeData } = tenant;
     return {
       ...safeData,
       hasCertificado: !!certificadoDigital,
@@ -215,13 +215,12 @@ export class TenantsService {
 
     // Try to parse the PFX to validate password
     // We'll use Node.js crypto module for this
-    let certificateInfo: { expiresAt?: string } = {};
+    let certificateInfo: { expiresAt?: string };
     
     try {
       // Use crypto to verify the password by attempting to parse
       // Node.js PKCS12 parsing requires the password
-      const parsed = this.parsePKCS12(pfxBuffer, password);
-      certificateInfo = parsed;
+      certificateInfo = this.parsePKCS12(pfxBuffer, password);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('Invalid password') || errorMessage.includes('wrong password')) {
@@ -254,7 +253,6 @@ export class TenantsService {
    * Parse PKCS12 (PFX) file to extract certificate info
    * This is a simplified implementation - in production, use a proper library
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private parsePKCS12(pfxBuffer: Buffer, _password: string): { expiresAt?: string } {
     // Basic validation - PFX files start with SEQUENCE (0x30)
     if (pfxBuffer[0] !== 0x30) {

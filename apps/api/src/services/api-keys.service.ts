@@ -33,7 +33,7 @@ export class ApiKeysService {
 
   async findAll(): Promise<Omit<ApiKeyEntity, 'keyHash'>[]> {
     const keys = await apiKeysRepository.findAll();
-    return keys.map(({ keyHash, ...rest }) => rest);
+    return keys.map(({ keyHash: _unused, ...rest }) => rest);
   }
 
   async findById(id: string): Promise<ApiKeyEntity | null> {

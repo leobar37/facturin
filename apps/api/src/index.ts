@@ -23,8 +23,8 @@ const jwtPlugin = jwt({
   exp: '15m',
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const app: any = new Elysia()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+const _app: any = new Elysia()
   // Global middleware
   .use(errorHandler)
   .use(cors())
@@ -62,4 +62,4 @@ const app: any = new Elysia()
     console.log(`📚 Swagger docs at http://${hostname}:${port}/swagger`);
   });
 
-export type App = typeof app;
+export type App = typeof _app;
