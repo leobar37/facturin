@@ -144,6 +144,22 @@ export class TenantsRepository {
     return result ? mapToTenantEntity(result) : null;
   }
 
+  async updateCertificate(
+    id: string,
+    data: { certificadoDigital: string; certificadoPassword: string }
+  ): Promise<TenantEntity | null> {
+    const [result] = await db
+      .update(tenants)
+      .set({ 
+        certificadoDigital: data.certificadoDigital,
+        certificadoPassword: data.certificadoPassword,
+        updatedAt: new Date() 
+      })
+      .where(eq(tenants.id, id))
+      .returning();
+    return result ? mapToTenantEntity(result) : null;
+  }
+
   async delete(id: string): Promise<boolean> {
     const [result] = await db
       .delete(tenants)

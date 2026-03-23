@@ -144,4 +144,28 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
     params: t.Object({
       id: t.String({ format: 'uuid' }),
     }),
+  })
+  // Upload certificate for tenant
+  .post('/:id/certificate', async ({ params, body }) => {
+    const { id } = params;
+    const data = body as {
+      certificate: string;  // base64 encoded PFX/P12
+      password: string;
+    };
+
+    const result = await tenantsService.uploadCertificate(
+      id,
+      data.certificate,
+      data.password
+    );
+
+    return result;
+  }, {
+    params: t.Object({
+      id: t.String({ format: 'uuid' }),
+    }),
+    body: t.Object({
+      certificate: t.String({ minLength: 1 }),
+      password: t.String({ minLength: 1 }),
+    }),
   });
