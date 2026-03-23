@@ -12,9 +12,10 @@ export interface RequestContext {
 
 export const authMiddleware = (app: Elysia) =>
   app.onBeforeHandle(async ({ headers, path, store }) => {
-    // Skip auth for public routes
+    // Skip auth for public routes and admin routes (admin routes use their own middleware)
     const publicPaths = ['/api/health', '/api/auth/login', '/swagger', '/api/inngest'];
-    if (publicPaths.some((p) => path.startsWith(p))) {
+    const adminPaths = ['/api/admin/'];
+    if (publicPaths.some((p) => path.startsWith(p)) || adminPaths.some((p) => path.startsWith(p))) {
       return;
     }
 

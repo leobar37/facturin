@@ -10,6 +10,7 @@ import { v1SeriesRoutes } from './routes/v1/series';
 import { healthRoutes } from './routes/health';
 
 import { authMiddleware } from './middleware/auth';
+import { adminAuthMiddleware } from './middleware/admin-auth';
 import { errorHandler } from './middleware/error-handler';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
@@ -44,10 +45,12 @@ const app: any = new Elysia()
   // Public routes (no auth required)
   .use(healthRoutes)
   .use(authRoutes)
-  // Protected routes (require JWT or API Key)
-  .use(authMiddleware)
+  // Admin routes (require JWT only - not API Keys)
+  .use(adminAuthMiddleware)
   .use(adminApiKeysRoutes)
   .use(adminTenantsRoutes)
+  // Protected v1 routes (require API Key)
+  .use(authMiddleware)
   .use(v1SeriesRoutes)
   // Start server
   .listen(3001, ({ hostname, port }) => {
