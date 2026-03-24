@@ -6,6 +6,12 @@ import {
   parseTenantCommand,
   printTenantsHelp,
 } from './commands/tenants.js';
+import {
+  listSeries,
+  createSeries,
+  parseSeriesCommand,
+  printSeriesHelp,
+} from './commands/series.js';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -36,12 +42,16 @@ async function main() {
         break;
       }
 
-      case 'series':
+      case 'series': {
+        await handleSeriesCommand(args.slice(1));
+        break;
+      }
+
       case 'emit': {
-        // These require auth - will be implemented in future features
+        // This requires auth - will be implemented in future features
         requireAuth();
         throw new CLIError(
-          `"facturin ${command}" is not yet implemented.`,
+          `"facturin emit" is not yet implemented.`,
           'NOT_IMPLEMENTED'
         );
       }
@@ -99,6 +109,25 @@ async function handleTenantsCommand(args: string[]): Promise<void> {
       break;
     case 'create':
       await createTenant(parsed.options);
+      break;
+  }
+}
+
+async function handleSeriesCommand(args: string[]): Promise<void> {
+  // If no subcommand or --help, show help
+  if (!args[0] || args[0] === '--help' || args[0] === '-h') {
+    printSeriesHelp();
+    return;
+  }
+
+  const parsed = parseSeriesCommand(args);
+
+  switch (parsed.subcommand) {
+    case 'list':
+      await listSeries(parsed.options);
+      break;
+    case 'create':
+      await createSeries(parsed.options);
       break;
   }
 }
