@@ -14,6 +14,7 @@ import type {
 } from './types.js';
 import { TenantsAPI } from './tenants.js';
 import { SeriesAPI } from './series.js';
+import { ComprobantesAPI } from './comprobantes.js';
 
 export interface ClientConfig {
   baseUrl: string;
@@ -31,6 +32,7 @@ export class FacturinClient {
   private readonly tenantId: string;
   public readonly tenants: TenantsAPI;
   public readonly series: SeriesAPI;
+  public readonly comprobantes: ComprobantesAPI;
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -48,6 +50,7 @@ export class FacturinClient {
     this.tenantId = config.tenantId;
     this.tenants = new TenantsAPI(this);
     this.series = new SeriesAPI(this);
+    this.comprobantes = new ComprobantesAPI(this);
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {

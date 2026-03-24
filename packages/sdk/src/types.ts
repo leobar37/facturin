@@ -100,7 +100,7 @@ export interface Comprobante {
   clienteTipoDocumento: string;
   clienteNumeroDocumento: string;
   clienteNombre: string;
-  clienteDireccion?: Record<string, unknown>;
+  clienteDireccion?: string;
   totalGravadas: number;
   totalIgv: number;
   totalImporte: number;
@@ -119,7 +119,7 @@ export interface CreateComprobanteInput {
   clienteTipoDocumento: string;
   clienteNumeroDocumento: string;
   clienteNombre: string;
-  clienteDireccion?: Record<string, unknown>;
+  clienteDireccion?: string;
   detalles: Omit<ComprobanteDetalle, 'subtotal' | 'igv'>[];
   formaPago?: ComprobanteFormaPago;
   leyendas?: ComprobanteLeyenda[];

@@ -12,6 +12,13 @@ export type { ListTenantsOptions, ListTenantsResult } from './tenants.js';
 export { SeriesAPI } from './series.js';
 export type { ListSeriesOptions, ListSeriesResult } from './series.js';
 
+// Export ComprobantesAPI
+export { ComprobantesAPI } from './comprobantes.js';
+export type {
+  ListComprobantesOptions,
+  ListComprobantesResult,
+} from './comprobantes.js';
+
 // Export errors
 export {
   FacturinError,
