@@ -192,4 +192,22 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
       username: t.String({ minLength: 1 }),
       password: t.String({ minLength: 1 }),
     }),
+  })
+  // Check tenant readiness (admin endpoint with JWT auth)
+  .get('/:id/readiness', async ({ params }) => {
+    const { id } = params;
+
+    const tenant = await tenantsService.findById(id);
+
+    if (!tenant) {
+      throw new NotFoundError('Tenant not found', 'NOT_FOUND');
+    }
+
+    const readiness = await tenantsService.checkReadiness(id);
+
+    return readiness;
+  }, {
+    params: t.Object({
+      id: t.String({ format: 'uuid' }),
+    }),
   });

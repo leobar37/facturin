@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { FormInput } from './ui/form-input';
-import { useTenantById } from '../hooks/use-tenants';
+import { useTenantById, useTenantReadiness } from '../hooks/use-tenants';
 import { useUploadCertificate, useUpdateSunatCredentials } from '../hooks/use-create-tenant';
 import { useSeries, useCreateSerie } from '../hooks/use-series';
 
@@ -641,25 +641,43 @@ function SeriesSection({ tenantId }: { tenantId: string }) {
 }
 
 // Test Connection Button Component
-function TestConnectionSection({ tenantId: _tenantId }: { tenantId: string }) {
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+function TestConnectionSection({ tenantId }: { tenantId: string }) {
+  const { data: readiness, isLoading, error, refetch } = useTenantReadiness(tenantId);
 
   const handleTestConnection = async () => {
-    setIsLoading(true);
-    setResult(null);
-
-    // Simulate connection test - in real implementation, this would call a backend endpoint
-    // that validates the certificate and SUNAT credentials
-    setTimeout(() => {
-      // This is a placeholder - real implementation would test actual SUNAT connection
-      setResult({
-        success: true,
-        message: 'La conexión con SUNAT se realizó exitosamente. El tenant está configurado correctamente.',
-      });
-      setIsLoading(false);
-    }, 1500);
+    await refetch();
   };
+
+  const getResultMessage = () => {
+    if (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Error al probar conexión',
+      };
+    }
+    if (readiness) {
+      if (readiness.ready) {
+        return {
+          success: true,
+          message: 'La conexión con SUNAT se realizó exitosamente. El tenant está configurado correctamente.',
+        };
+      } else {
+        const missingLabels: Record<string, string> = {
+          certificate: 'certificado digital',
+          sunat_credentials: 'credenciales SUNAT',
+          series: 'series de comprobantes',
+        };
+        const missingItems = readiness.missing.map((m) => missingLabels[m] || m);
+        return {
+          success: false,
+          message: `El tenant no está listo. Faltan: ${missingItems.join(', ')}.`,
+        };
+      }
+    }
+    return null;
+  };
+
+  const result = getResultMessage();
 
   return (
     <div

@@ -33,6 +33,16 @@ export interface TenantsResponse {
   };
 }
 
+export interface ReadinessCheck {
+  ready: boolean;
+  missing: string[];
+  checks: {
+    hasCertificate: boolean;
+    hasSunatCredentials: boolean;
+    hasSeries: boolean;
+  };
+}
+
 export interface UseTenantsOptions {
   search?: string;
   limit?: number;
@@ -79,6 +89,22 @@ async function fetchTenantById(token: string, id: string): Promise<Tenant> {
   return response.json();
 }
 
+async function fetchTenantReadiness(token: string, id: string): Promise<ReadinessCheck> {
+  const response = await fetch(`${API_URL}/api/admin/tenants/${id}/readiness`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Error checking readiness' }));
+    throw new Error(error.message || 'Error checking readiness');
+  }
+
+  return response.json();
+}
+
 async function deactivateTenant(token: string, id: string): Promise<{ id: string; isActive: boolean }> {
   const response = await fetch(`${API_URL}/api/admin/tenants/${id}`, {
     method: 'DELETE',
@@ -119,6 +145,21 @@ export function useTenantById(id: string | null) {
       return fetchTenantById(token, id);
     },
     enabled: !!token && !!id,
+  });
+}
+
+export function useTenantReadiness(id: string | null) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
+  return useQuery({
+    queryKey: ['tenant-readiness', id],
+    queryFn: () => {
+      if (!token) throw new Error('Not authenticated');
+      if (!id) throw new Error('Tenant ID required');
+      return fetchTenantReadiness(token, id);
+    },
+    enabled: !!token && !!id,
+    retry: false,
   });
 }
 
