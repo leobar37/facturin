@@ -5,7 +5,10 @@ import {
   RouterProvider,
   Link,
   Outlet,
+  Navigate,
 } from 'react-router';
+import { LoginPage } from './components/login-page';
+import { useAuth } from './hooks/use-auth';
 
 // Root Layout Component
 function RootLayout() {
@@ -38,38 +41,71 @@ function IndexPage() {
   );
 }
 
-// Dashboard Page Component
+// Dashboard Page Component - Protected
 function DashboardPage() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+        <p>Cargando...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    window.location.href = '/login';
+  };
+
   return (
     <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Dashboard</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Dashboard</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span style={{ color: '#6b7280' }}>{user?.email}</span>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+            }}
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
       <p>Bienvenido al panel de administración de Facturin.</p>
     </div>
   );
 }
 
-// Login Page Component
-function LoginPage() {
-  return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Login</h1>
-      <form>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
-            Email
-          </label>
-          <input type="email" id="email" name="email" />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
-            Contraseña
-          </label>
-          <input type="password" id="password" name="password" />
-        </div>
-        <button type="submit">Iniciar Sesión</button>
-      </form>
-    </div>
-  );
+// Login Page Wrapper
+function LoginPageWrapper() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
+        <p>Cargando...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LoginPage />;
 }
 
 // Tenants Page Component
@@ -109,7 +145,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <LoginPage />,
+        element: <LoginPageWrapper />,
       },
       {
         path: 'tenants',
