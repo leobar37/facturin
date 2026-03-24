@@ -1,0 +1,19 @@
+{
+  "featureId": "fix-frontend-api-port",
+  "status": "pass",
+  "originalFailedFeature": "web-tenant-list",
+  "originalBlockingIssue": "Wrong API port hardcoded (3001) in inline use-tenants implementation. services.yaml defines API on port 3100.",
+  "fixVerification": {
+    "commitReviewed": "80e9eef",
+    "changes": "Updated all 5 files to use import.meta.env.VITE_API_URL || 'http://localhost:3100'",
+    "grepResults": "No matches for '3001' in apps/web/src",
+    "envDocumentation": ".env.example created documenting VITE_API_URL variable"
+  },
+  "sharedStateObservations": [
+    {
+      "type": "port-discrepancy",
+      "description": "docker-compose.yml defines API on port 3001 while services.yaml defines port 3100. The fix correctly uses services.yaml's port 3100 as the default for agent-based local development.",
+      "sourceFeature": "fix-frontend-api-port"
+    }
+  ]
+}
