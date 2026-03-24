@@ -13,6 +13,7 @@ import { DashboardLayout } from './components/dashboard-layout';
 import { TenantsListPage } from './components/tenants-list-page';
 import { TenantCreationWizard } from './components/tenant-creation-wizard';
 import { TenantConfigurationPage } from './components/tenant-configuration-page';
+import { ApiKeysListPage } from './components/api-keys-list-page';
 import { useAuth } from './hooks/use-auth';
 
 // Create a client
@@ -239,14 +240,7 @@ function TenantConfigurePage() {
 
 // API Keys Page Component
 function ApiKeysPage() {
-  return (
-    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
-        API Keys
-      </h1>
-      <p style={{ color: '#6b7280' }}>Gestiona las claves de API del sistema.</p>
-    </div>
-  );
+  return <ApiKeysListPage />;
 }
 
 // Settings Page Component
