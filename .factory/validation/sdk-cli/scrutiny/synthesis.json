@@ -1,0 +1,127 @@
+{
+  "milestone": "sdk-cli",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": false,
+      "command": "bun test",
+      "exitCode": 1,
+      "note": "7 tests failed in apps/api/src/routes/__tests__/sunat-credentials.test.ts - these are backend-core integration tests, not sdk-cli. All SDK and CLI tests passed (246/253)."
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "bun run typecheck",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "bun run lint",
+      "exitCode": 0,
+      "note": "Only 3 warnings about 'any' types, no errors"
+    }
+  },
+  "reviewsSummary": {
+    "total": 9,
+    "passed": 6,
+    "failed": 3,
+    "failedFeatures": [
+      "sdk-comprobantes-methods",
+      "cli-series-commands",
+      "cli-emit-command"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "sdk-comprobantes-methods",
+      "severity": "blocking",
+      "description": "SDK type mismatch: CreateComprobanteInput requires 'precioUnitario' but API expects 'valorUnitario' for totals calculation. SDK users would provide wrong field.",
+      "files": ["packages/sdk/src/types.ts:109"],
+      "suggestedFix": "Change SDK to use 'valorUnitario' instead of 'precioUnitario' to match API expectation"
+    },
+    {
+      "featureId": "sdk-comprobantes-methods",
+      "severity": "blocking",
+      "description": "Type mismatch: API returns totalGravadas, totalIgv, totalImporte as strings (via toFixed(2)) but SDK types them as numbers",
+      "files": ["packages/sdk/src/types.ts:93"],
+      "suggestedFix": "Update Comprobante type to use string for these fields, or parse them in the SDK client"
+    },
+    {
+      "featureId": "sdk-comprobantes-methods",
+      "severity": "blocking",
+      "description": "SDK doesn't validate RUC format when clienteTipoDocumento is '6'. API validates this server-side but SDK should catch it client-side.",
+      "files": ["packages/sdk/src/comprobantes.ts:105"],
+      "suggestedFix": "Add client-side RUC validation when documento tipo is 6"
+    },
+    {
+      "featureId": "cli-series-commands",
+      "severity": "blocking",
+      "description": "Uses 'as any' cast on line 45 of series.ts when calling client.series.list(options), violating AGENTS.md convention",
+      "files": ["packages/cli/src/commands/series.ts:45"],
+      "suggestedFix": "Remove the 'as any' cast - SDK returns properly typed ListSeriesResult"
+    },
+    {
+      "featureId": "cli-emit-command",
+      "severity": "blocking",
+      "description": "Implementation is UNTRACKED in git. The commitId 9386409 only contains series commands, not emit commands",
+      "files": ["packages/cli/src/commands/emit.ts"],
+      "suggestedFix": "Commit the emit.ts and emit.test.ts files"
+    },
+    {
+      "featureId": "cli-emit-command",
+      "severity": "blocking",
+      "description": "Help text shows 'facturin emit factura' but actual command is 'facturin emit'. The word 'factura' is extraneous.",
+      "files": ["packages/cli/src/commands/emit.ts:264"],
+      "suggestedFix": "Fix help text to say 'facturin emit' instead of 'facturin emit factura'"
+    },
+    {
+      "featureId": "cli-emit-command",
+      "severity": "blocking",
+      "description": "parseEmitCommand has tipoComprobante in return type but no --tipo-comprobante flag is parsed",
+      "files": ["packages/cli/src/commands/emit.ts:220"],
+      "suggestedFix": "Add --tipo-comprobante flag parsing or remove it from the return type"
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Document the expected type for clienteDireccion - the SDK had to discover through trial and error that it should be string, not Record<string, unknown>",
+      "evidence": "Feature sdk-comprobantes-methods fixed clienteDireccion type from Record<string, unknown> to string",
+      "isSystemic": false
+    },
+    {
+      "target": "skills/sdk-worker",
+      "suggestion": "Add step to require comparing SDK types with actual API types (reading API schema/service files) before finalizing SDK type definitions",
+      "evidence": "sdk-comprobantes-methods had type mismatches with API that weren't caught because worker only tested with mocks",
+      "isSystemic": true
+    },
+    {
+      "target": "skills/cli-worker",
+      "suggestion": "Clarify TDD guidance: CLI commands that require a live API should use integration tests with mocks, not traditional TDD unit tests",
+      "evidence": "cli-series-commands and cli-emit-command followed TDD procedure but no tests were added for series commands",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Document RUC validation algorithm requirements - the SUNAT-specific validation (11 digits + checksum) is not documented",
+      "evidence": "API has RUC validation in comprobantes.service.ts but AGENTS.md has no mention of it",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null,
+  "preExistingTestFailures": {
+    "description": "7 integration tests in apps/api/src/routes/__tests__/sunat-credentials.test.ts are failing. These tests belong to backend-core milestone, not sdk-cli. All SDK and CLI tests passed.",
+    "tests": [
+      "VAL-API-012: should reject requests without username",
+      "VAL-API-012: should reject requests without password",
+      "VAL-API-013: should reject username shorter than 6 characters",
+      "VAL-API-013: should reject username longer than 20 characters",
+      "VAL-API-013: should reject username with special characters",
+      "VAL-API-015: should update SUNAT credentials and return success",
+      "VAL-API-016: should return 404 when tenant ID does not exist"
+    ],
+    "note": "These are pre-existing failures in backend-core. SDK and CLI tests for sdk-cli milestone all pass."
+  }
+}
