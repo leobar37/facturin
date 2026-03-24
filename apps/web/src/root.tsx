@@ -11,6 +11,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from './components/login-page';
 import { DashboardLayout } from './components/dashboard-layout';
 import { TenantsListPage } from './components/tenants-list-page';
+import { TenantCreationWizard } from './components/tenant-creation-wizard';
+import { TenantConfigurationPage } from './components/tenant-configuration-page';
 import { useAuth } from './hooks/use-auth';
 
 // Create a client
@@ -225,6 +227,16 @@ function TenantsPage() {
   return <TenantsListPage />;
 }
 
+// Tenant Creation Page Component
+function TenantCreatePage() {
+  return <TenantCreationWizard />;
+}
+
+// Tenant Configuration Page Component
+function TenantConfigurePage() {
+  return <TenantConfigurationPage />;
+}
+
 // API Keys Page Component
 function ApiKeysPage() {
   return (
@@ -316,6 +328,14 @@ const router = createBrowserRouter([
       {
         path: 'tenants',
         element: <TenantsPage />,
+      },
+      {
+        path: 'tenants/new',
+        element: <TenantCreatePage />,
+      },
+      {
+        path: 'tenants/:id/configure',
+        element: <TenantConfigurePage />,
       },
       {
         path: 'api-keys',
