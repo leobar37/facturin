@@ -1,4 +1,4 @@
-import { login, logout, requireAuth, CLIError } from './commands/auth.js';
+import { login, logout, CLIError } from './commands/auth.js';
 import { showConfig, setConfig, unsetConfig } from './commands/config.js';
 import {
   listTenants,
@@ -12,6 +12,10 @@ import {
   parseSeriesCommand,
   printSeriesHelp,
 } from './commands/series.js';
+import {
+  emitFactura,
+  parseEmitCommand,
+} from './commands/emit.js';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -48,12 +52,9 @@ async function main() {
       }
 
       case 'emit': {
-        // This requires auth - will be implemented in future features
-        requireAuth();
-        throw new CLIError(
-          `"facturin emit" is not yet implemented.`,
-          'NOT_IMPLEMENTED'
-        );
+        const emitOptions = parseEmitCommand(args.slice(1));
+        await emitFactura(emitOptions);
+        break;
       }
 
       case 'help':

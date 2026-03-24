@@ -1,24 +1,6 @@
 import * as readline from 'node:readline';
 import { requireAuth, CLIError } from './auth.js';
-import type { CreateSerieInput, Serie, TipoComprobante } from '@facturin/sdk';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface ListSeriesOptions {
-  tipoComprobante?: TipoComprobante;
-  isActive?: boolean;
-  limit?: number;
-  offset?: number;
-}
-
-interface ListSeriesResult {
-  series: Serie[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+import type { CreateSerieInput, ListSeriesOptions, Serie, TipoComprobante } from '@facturin/sdk';
 
 // ============================================================================
 // Tipo Comprobante mapping for display
@@ -44,7 +26,7 @@ export async function listSeries(options: ListSeriesOptions = {}): Promise<void>
   console.log('Fetching series...');
 
   try {
-    const result = await (client.series.list as any)(options) as ListSeriesResult;
+    const result = await client.series.list(options);
 
     if (result.series.length === 0) {
       console.log('\nNo series found.');

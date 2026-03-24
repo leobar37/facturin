@@ -119,10 +119,16 @@ declare module '@facturin/sdk' {
 
   export interface ListSeriesOptions {
     tipoComprobante?: TipoComprobante;
+    isActive?: boolean;
+    limit?: number;
+    offset?: number;
   }
 
   export interface ListSeriesResult {
-    data: Serie[];
+    series: Serie[];
+    total: number;
+    limit: number;
+    offset: number;
   }
 
   export interface Serie {
