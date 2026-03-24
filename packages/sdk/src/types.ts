@@ -43,7 +43,10 @@ export type TipoComprobante =
   | '01' // Factura
   | '03' // Boleta
   | '07' // Nota de crédito
-  | '08'; // Nota de débito
+  | '08' // Nota de débito
+  | '09' // Guía de remisión
+  | '20' // Nota de crédito (otro)
+  | '40' // Comprobante de percepción
 
 export interface Serie {
   id: string;

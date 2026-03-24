@@ -8,6 +8,10 @@ export type { ClientConfig, RequestOptions } from './client.js';
 export { TenantsAPI, validateRuc } from './tenants.js';
 export type { ListTenantsOptions, ListTenantsResult } from './tenants.js';
 
+// Export SeriesAPI
+export { SeriesAPI } from './series.js';
+export type { ListSeriesOptions, ListSeriesResult } from './series.js';
+
 // Export errors
 export {
   FacturinError,

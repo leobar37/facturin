@@ -13,6 +13,7 @@ import type {
   ApiSuccessResponse,
 } from './types.js';
 import { TenantsAPI } from './tenants.js';
+import { SeriesAPI } from './series.js';
 
 export interface ClientConfig {
   baseUrl: string;
@@ -29,6 +30,7 @@ export class FacturinClient {
   private readonly apiKey: string;
   private readonly tenantId: string;
   public readonly tenants: TenantsAPI;
+  public readonly series: SeriesAPI;
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -45,6 +47,7 @@ export class FacturinClient {
     this.apiKey = config.apiKey;
     this.tenantId = config.tenantId;
     this.tenants = new TenantsAPI(this);
+    this.series = new SeriesAPI(this);
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
