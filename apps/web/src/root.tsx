@@ -7,9 +7,21 @@ import {
   Navigate,
   Outlet,
 } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LoginPage } from './components/login-page';
 import { DashboardLayout } from './components/dashboard-layout';
+import { TenantsListPage } from './components/tenants-list-page';
 import { useAuth } from './hooks/use-auth';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 // Loading component
 function LoadingPage() {
@@ -210,14 +222,7 @@ function DashboardPage() {
 
 // Tenants Page Component
 function TenantsPage() {
-  return (
-    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
-        Tenants
-      </h1>
-      <p style={{ color: '#6b7280' }}>Gestiona los tenants registrados en el sistema.</p>
-    </div>
-  );
+  return <TenantsListPage />;
 }
 
 // API Keys Page Component
@@ -335,7 +340,9 @@ if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
     </React.StrictMode>
   );
 }
