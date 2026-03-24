@@ -1,5 +1,11 @@
 import { login, logout, requireAuth, CLIError } from './commands/auth.js';
 import { showConfig, setConfig, unsetConfig } from './commands/config.js';
+import {
+  listTenants,
+  createTenant,
+  parseTenantCommand,
+  printTenantsHelp,
+} from './commands/tenants.js';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -25,7 +31,11 @@ async function main() {
         break;
       }
 
-      case 'tenants':
+      case 'tenants': {
+        await handleTenantsCommand(args.slice(1));
+        break;
+      }
+
       case 'series':
       case 'emit': {
         // These require auth - will be implemented in future features
@@ -71,6 +81,25 @@ async function main() {
 
     console.error('An unexpected error occurred');
     process.exit(1);
+  }
+}
+
+async function handleTenantsCommand(args: string[]): Promise<void> {
+  // If no subcommand or --help, show help
+  if (!args[0] || args[0] === '--help' || args[0] === '-h') {
+    printTenantsHelp();
+    return;
+  }
+
+  const parsed = parseTenantCommand(args);
+
+  switch (parsed.subcommand) {
+    case 'list':
+      await listTenants(parsed.options);
+      break;
+    case 'create':
+      await createTenant(parsed.options);
+      break;
   }
 }
 
