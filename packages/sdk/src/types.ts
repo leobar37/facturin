@@ -22,6 +22,8 @@ export interface Tenant {
   contactoPhone?: string;
   isActive: boolean;
   maxDocumentsPerMonth?: number;
+  hasCertificate: boolean;
+  hasSunatCredentials: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
