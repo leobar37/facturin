@@ -4,6 +4,10 @@
 export { FacturinClient } from './client.js';
 export type { ClientConfig, RequestOptions } from './client.js';
 
+// Export TenantsAPI and helpers
+export { TenantsAPI, validateRuc } from './tenants.js';
+export type { ListTenantsOptions, ListTenantsResult } from './tenants.js';
+
 // Export errors
 export {
   FacturinError,

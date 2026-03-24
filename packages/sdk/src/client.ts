@@ -12,6 +12,7 @@ import type {
   ApiValidationErrorResponse,
   ApiSuccessResponse,
 } from './types.js';
+import { TenantsAPI } from './tenants.js';
 
 export interface ClientConfig {
   baseUrl: string;
@@ -27,6 +28,7 @@ export class FacturinClient {
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly tenantId: string;
+  public readonly tenants: TenantsAPI;
 
   constructor(config: ClientConfig) {
     if (!config.baseUrl) {
@@ -42,6 +44,7 @@ export class FacturinClient {
     this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
     this.apiKey = config.apiKey;
     this.tenantId = config.tenantId;
+    this.tenants = new TenantsAPI(this);
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
