@@ -4,22 +4,56 @@ import {
   createBrowserRouter,
   RouterProvider,
   Link,
-  Outlet,
   Navigate,
+  Outlet,
 } from 'react-router';
 import { LoginPage } from './components/login-page';
+import { DashboardLayout } from './components/dashboard-layout';
 import { useAuth } from './hooks/use-auth';
 
-// Root Layout Component
-function RootLayout() {
+// Loading component
+function LoadingPage() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f5f5f5',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #e5e7eb',
+            borderTopColor: '#1976d2',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem',
+          }}
+        />
+        <p style={{ color: '#6b7280' }}>Cargando...</p>
+      </div>
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+// Root Layout Component (public routes only)
+function PublicLayout() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <header style={{ backgroundColor: '#1976d2', color: 'white', padding: '1rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>Facturin</h1>
-      </header>
-      <main style={{ padding: '2rem' }}>
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }
@@ -27,66 +61,76 @@ function RootLayout() {
 // Index Page Component
 function IndexPage() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Facturin</h1>
-      <p>Sistema de Facturación Electrónica SUNAT</p>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, sans-serif',
+        padding: '2rem',
+      }}
+    >
+      <div
+        style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '1rem',
+          backgroundColor: '#1976d2',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontWeight: 700,
+          fontSize: '2rem',
+          marginBottom: '1.5rem',
+        }}
+      >
+        F
+      </div>
+      <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem' }}>
+        Facturin
+      </h1>
+      <p style={{ color: '#6b7280', marginBottom: '2rem', textAlign: 'center' }}>
+        Sistema de Facturación Electrónica SUNAT
+      </p>
       <nav>
-        <ul>
-          <li><Link to="/dashboard">Dashboard</Link></li>
-          <li><Link to="/tenants">Tenants</Link></li>
-          <li><Link to="/login">Login</Link></li>
+        <ul style={{ listStyle: 'none', padding: 0, display: 'flex', gap: '1rem' }}>
+          <li>
+            <Link
+              to="/login"
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#1976d2',
+                color: 'white',
+                borderRadius: '0.375rem',
+                textDecoration: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Iniciar Sesión
+            </Link>
+          </li>
         </ul>
       </nav>
     </div>
   );
 }
 
-// Dashboard Page Component - Protected
-function DashboardPage() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+// Protected Route Wrapper
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-        <p>Cargando...</p>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-    window.location.href = '/login';
-  };
-
-  return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ color: '#6b7280' }}>{user?.email}</span>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#dc2626',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-            }}
-          >
-            Cerrar Sesión
-          </button>
-        </div>
-      </div>
-      <p>Bienvenido al panel de administración de Facturin.</p>
-    </div>
-  );
+  return <>{children}</>;
 }
 
 // Login Page Wrapper
@@ -94,11 +138,7 @@ function LoginPageWrapper() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-        <p>Cargando...</p>
-      </div>
-    );
+    return <LoadingPage />;
   }
 
   if (isAuthenticated) {
@@ -108,12 +148,98 @@ function LoginPageWrapper() {
   return <LoginPage />;
 }
 
+// Dashboard Page Component
+function DashboardPage() {
+  return (
+    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+        Dashboard
+      </h1>
+      <p style={{ color: '#6b7280' }}>Bienvenido al panel de administración de Facturin.</p>
+
+      {/* Stats cards */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
+          marginTop: '2rem',
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Tenants</p>
+          <p style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>0</p>
+        </div>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            Comprobantes
+          </p>
+          <p style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>0</p>
+        </div>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            API Keys
+          </p>
+          <p style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>0</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Tenants Page Component
 function TenantsPage() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif' }}>
-      <h1>Tenants</h1>
-      <p>Lista de tenants registrados en el sistema.</p>
+    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+        Tenants
+      </h1>
+      <p style={{ color: '#6b7280' }}>Gestiona los tenants registrados en el sistema.</p>
+    </div>
+  );
+}
+
+// API Keys Page Component
+function ApiKeysPage() {
+  return (
+    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+        API Keys
+      </h1>
+      <p style={{ color: '#6b7280' }}>Gestiona las claves de API del sistema.</p>
+    </div>
+  );
+}
+
+// Settings Page Component
+function SettingsPage() {
+  return (
+    <div style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+        Configuración
+      </h1>
+      <p style={{ color: '#6b7280' }}>Configura los ajustes del sistema.</p>
     </div>
   );
 }
@@ -121,41 +247,85 @@ function TenantsPage() {
 // 404 Not Found Page Component
 function NotFoundPage() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', textAlign: 'center' }}>
-      <h1>404 - Página no encontrada</h1>
-      <p>La página que buscas no existe.</p>
-      <Link to="/">Volver al inicio</Link>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, sans-serif',
+        textAlign: 'center',
+        padding: '2rem',
+      }}
+    >
+      <h1 style={{ fontSize: '4rem', fontWeight: 700, color: '#1f2937', marginBottom: '0.5rem' }}>404</h1>
+      <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>Página no encontrada</p>
+      <Link
+        to="/"
+        style={{
+          padding: '0.75rem 1.5rem',
+          backgroundColor: '#1976d2',
+          color: 'white',
+          borderRadius: '0.375rem',
+          textDecoration: 'none',
+          fontWeight: 500,
+        }}
+      >
+        Volver al inicio
+      </Link>
     </div>
   );
 }
 
 // Create the router with file-based routing structure
 const router = createBrowserRouter([
+  // Public routes
   {
     path: '/',
-    element: <RootLayout />,
+    element: <PublicLayout />,
     children: [
       {
         index: true,
         element: <IndexPage />,
       },
       {
-        path: 'dashboard',
-        element: <DashboardPage />,
-      },
-      {
         path: 'login',
         element: <LoginPageWrapper />,
+      },
+    ],
+  },
+  // Protected routes with dashboard layout
+  {
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
       },
       {
         path: 'tenants',
         element: <TenantsPage />,
       },
       {
-        path: '*',
-        element: <NotFoundPage />,
+        path: 'api-keys',
+        element: <ApiKeysPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
     ],
+  },
+  // 404 catch-all (outside of layout)
+  {
+    path: '*',
+    element: <NotFoundPage />,
   },
 ]);
 
