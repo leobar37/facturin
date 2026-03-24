@@ -170,17 +170,46 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
     }),
   })
   // Update SUNAT credentials for tenant
-  .put('/:id/sunat-credentials', async ({ params, body }) => {
+  .put('/:id/sunat-credentials', async ({ params, body, set }) => {
     const { id } = params;
-    const data = body as {
-      username: string;
-      password: string;
-    };
+    
+    // Handle body parsing safely
+    const data = body as Record<string, unknown> | undefined;
+    
+    if (!data) {
+      set.status = 400;
+      return {
+        error: 'SUNAT username and password are required',
+        code: 'SUNAT_CREDENTIALS_REQUIRED',
+      };
+    }
+
+    const username = data.username as string | undefined;
+    const password = data.password as string | undefined;
+
+    // Validate required fields at route level with proper error messages
+    if (!username || !password) {
+      set.status = 400;
+      return {
+        error: 'SUNAT username and password are required',
+        code: 'SUNAT_CREDENTIALS_REQUIRED',
+      };
+    }
+
+    // Validate username format (6-20 alphanumeric characters)
+    const usernameRegex = /^[A-Za-z0-9]{6,20}$/;
+    if (!usernameRegex.test(username)) {
+      set.status = 400;
+      return {
+        error: 'Invalid SUNAT username format',
+        code: 'INVALID_SUNAT_USERNAME',
+      };
+    }
 
     const result = await tenantsService.updateSunatCredentials(
       id,
-      data.username,
-      data.password
+      username,
+      password
     );
 
     return result;
