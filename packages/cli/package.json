@@ -1,0 +1,32 @@
+{
+  "name": "@facturin/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "facturin": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir=dist --target=bun --format=esm",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "test": "bun test",
+    "dev": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@facturin/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.11",
+    "eslint": "^10.1.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.1"
+  }
+}
