@@ -13,6 +13,8 @@ import { DashboardLayout } from './components/dashboard-layout';
 import { TenantsListPage } from './components/tenants-list-page';
 import { TenantCreationWizard } from './components/tenant-creation-wizard';
 import { TenantConfigurationPage } from './components/tenant-configuration-page';
+import { TenantViewPage } from './components/tenant-view-page';
+import { TenantEditPage } from './components/tenant-edit-page';
 import { ApiKeysListPage } from './components/api-keys-list-page';
 import { useAuth } from './hooks/use-auth';
 
@@ -238,6 +240,16 @@ function TenantConfigurePage() {
   return <TenantConfigurationPage />;
 }
 
+// Tenant View Page Component
+function TenantViewPageComponent() {
+  return <TenantViewPage />;
+}
+
+// Tenant Edit Page Component
+function TenantEditPageComponent() {
+  return <TenantEditPage />;
+}
+
 // API Keys Page Component
 function ApiKeysPage() {
   return <ApiKeysListPage />;
@@ -326,6 +338,14 @@ const router = createBrowserRouter([
       {
         path: 'tenants/new',
         element: <TenantCreatePage />,
+      },
+      {
+        path: 'tenants/:id',
+        element: <TenantViewPageComponent />,
+      },
+      {
+        path: 'tenants/:id/edit',
+        element: <TenantEditPageComponent />,
       },
       {
         path: 'tenants/:id/configure',

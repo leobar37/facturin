@@ -54,7 +54,7 @@ function ConfigBadge({ hasCertificado, hasSunatPassword }: { hasCertificado?: bo
 }
 
 // Empty state component
-function EmptyState({ hasSearch }: { hasSearch: boolean }) {
+function EmptyState({ hasSearch, onCreateTenant }: { hasSearch: boolean; onCreateTenant: () => void }) {
   return (
     <div
       style={{
@@ -107,6 +107,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
       </p>
       {!hasSearch && (
         <button
+          onClick={onCreateTenant}
           style={{
             padding: '0.75rem 1.5rem',
             backgroundColor: '#1976d2',
@@ -597,7 +598,7 @@ export function TenantsListPage() {
         ) : isError ? (
           <ErrorState message={error instanceof Error ? error.message : 'Error desconocido'} onRetry={refetch} />
         ) : !data?.data.length ? (
-          <EmptyState hasSearch={!!debouncedSearch} />
+          <EmptyState hasSearch={!!debouncedSearch} onCreateTenant={() => navigate('/tenants/new')} />
         ) : (
           <>
             {/* Table */}
