@@ -2,7 +2,101 @@
 
 Sistema de **facturación electrónica SUNAT** open source para Perú. Self-hosted SaaS multi-tenant donde el host se homologa como OSE (Operador de Servicios Electrónicos) y ofrece facturación a múltiples empresas.
 
-## Quick Start
+---
+
+## Uso Rápido (CLI)
+
+Si ya tienes acceso a una instancia de Facturin, puedes usar el CLI directamente:
+
+```bash
+# Instalar y usar sin instalar globalmente
+npx @facturin/cli login \
+  --base-url https://api.tu-instancia.com \
+  --api-key sk_live_xxx \
+  --tenant-id uuid-de-tu-empresa
+
+# Emitir una factura
+npx @facturin/cli emit --file factura.json
+
+# O en modo interactivo
+npx @facturin/cli emit --interactive
+```
+
+### Comandos Principales
+
+| Comando | Descripción |
+|---------|-------------|
+| `facturin login` | Autenticar con la API |
+| `facturin config show` | Ver configuración actual |
+| `facturin tenants list` | Listar empresas |
+| `facturin series list` | Listar series de documentos |
+| `facturin emit` | Emitir factura/boleta |
+
+### Ejemplo: Emitir una Factura
+
+1. Crear archivo `factura.json`:
+```json
+{
+  "serie": "F001",
+  "clienteTipoDocumento": "6",
+  "clienteNumeroDocumento": "20100178959",
+  "clienteNombre": "Empresa ABC SAC",
+  "clienteDireccion": "Av. Lima 123, Lima",
+  "detalles": [
+    {
+      "descripcion": "Servicio de consultoría",
+      "cantidad": 1,
+      "valorUnitario": 1000.00
+    }
+  ]
+}
+```
+
+2. Emitir:
+```bash
+npx @facturin/cli emit --file factura.json
+```
+
+---
+
+## SDK (TypeScript/JavaScript)
+
+Para integrar Facturin en tu aplicación:
+
+```bash
+npm install @facturin/sdk
+# o
+bun add @facturin/sdk
+```
+
+```typescript
+import { FacturinClient } from '@facturin/sdk';
+
+const client = new FacturinClient({
+  baseUrl: 'https://api.tu-instancia.com',
+  apiKey: 'sk_live_xxx',
+  tenantId: 'uuid-de-tu-empresa',
+});
+
+// Emitir factura
+const factura = await client.comprobantes.create({
+  serie: 'F001',
+  clienteTipoDocumento: '6',
+  clienteNumeroDocumento: '20100178959',
+  clienteNombre: 'Empresa ABC SAC',
+  detalles: [
+    { descripcion: 'Producto A', cantidad: 2, valorUnitario: 100 }
+  ]
+});
+
+console.log(factura.numero); // F001-00000001
+```
+
+---
+
+## Desarrollo Local
+
+Para contribuir al proyecto o ejecutar tu propia instancia:
 
 ```bash
 # 1. Clonar y entrar al directorio
@@ -16,13 +110,15 @@ cp apps/api/.env.example apps/api/.env
 # 3. Iniciar con Docker
 docker-compose up -d
 
-# 4. Crear tabla de super admin
+# 4. Crear super admin
 docker-compose exec api bun run scripts/create-super-admin.ts
 ```
 
-Accede a `http://localhost:3001` para la API.
+Accede a:
+- API: `http://localhost:3100`
+- Web: `http://localhost:5173`
 
-## Requisitos
+### Requisitos de Desarrollo
 
 - **Bun** 1.1+ o **Node.js** 20+
 - **PostgreSQL** 16 (o Docker)
@@ -72,10 +168,10 @@ docker-compose exec api bun run scripts/create-super-admin.ts
 facturin/
 ├── apps/
 │   ├── api/           # Backend Elysia.js
-│   └── web/           # Frontend (próximamente)
+│   └── web/           # Frontend React Router v7
 ├── packages/
-│   ├── sdk/           # SDK npm (próximamente)
-│   └── cli/           # CLI npx (próximamente)
+│   ├── sdk/           # SDK npm (@facturin/sdk)
+│   └── cli/           # CLI npx (@facturin/cli)
 ├── docs/              # Documentación
 └── docker-compose.yml
 ```
@@ -112,7 +208,7 @@ curl -H "Authorization: Bearer sk_live_xxx" \
 | `api_keys` | API keys globales |
 | `tenants` | Empresas que emiten comprobantes |
 | `series` | Series de documentos (F001, B001) |
-| `comprobantes` | Facturas, boletas, notas (próximamente) |
+| `comprobantes` | Facturas, boletas, notas de crédito/débito |
 | `sunat_logs` | Logs de comunicación SUNAT |
 
 ## Estado del Proyecto
@@ -126,14 +222,17 @@ curl -H "Authorization: Bearer sk_live_xxx" \
 - [x] CRUD de series
 - [x] Validación de RUC
 - [x] Docker Compose con PostgreSQL + Inngest
+- [x] SDK npm (`@facturin/sdk`)
+- [x] CLI (`@facturin/cli`)
+- [x] Módulo de comprobantes (facturas/boletas)
+- [x] Generación de XML UBL 2.1
+- [x] Firma digital con certificados
 
 ### En desarrollo
 
-- [ ] Módulo de comprobantes (facturas/boletas)
-- [ ] Integración con SUNAT
-- [ ] Frontend web
-- [ ] SDK npm
-- [ ] CLI
+- [ ] Integración con SUNAT (envío a OSE/CPE)
+- [ ] Frontend web (panel de administración)
+- [ ] Webhooks y notificaciones
 
 ## Scripts Disponibles
 
