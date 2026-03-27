@@ -172,7 +172,7 @@ facturin/
 ├── packages/
 │   ├── sdk/           # SDK npm (@facturin/sdk)
 │   └── cli/           # CLI npx (@facturin/cli)
-├── docs/              # Documentación
+├── docs/              # Documentación (local, no en repo)
 └── docker-compose.yml
 ```
 
@@ -248,8 +248,7 @@ bun test              # Tests
 
 ## Documentación
 
-- [Tutorial de Facturación Electrónica](./docs/tutorial-negocio-facturacion.md) — Conceptos del modelo de negocio peruano
-- [Schema de Base de Datos](./docs/database-schema.md) — Detalle de tablas y relaciones
+- `sunat.html` — Documentación completa de integración SUNAT (arquitectura, flujos, códigos de error, catálogos)
 
 ## Recursos SUNAT
 
