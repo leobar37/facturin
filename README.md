@@ -172,7 +172,6 @@ facturin/
 ├── packages/
 │   ├── sdk/           # SDK npm (@facturin/sdk)
 │   └── cli/           # CLI npx (@facturin/cli)
-├── docs/              # Documentación (local, no en repo)
 └── docker-compose.yml
 ```
 
