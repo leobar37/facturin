@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Documentación SUNAT - Facturin</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+                color: #1a1a2e;
+            }
+            h2 {
+                font-size: 1.75rem;
+                margin: 2rem 0 1rem;
+                color: #16213e;
+                border-bottom: 2px solid #e94560;
+                padding-bottom: 0.5rem;
+            }
+            h3 {
+                font-size: 1.25rem;
+                margin: 1.5rem 0 0.75rem;
+                color: #0f3460;
+            }
+            h4 {
+                font-size: 1rem;
+                margin: 1rem 0 0.5rem;
+                color: #533483;
+            }
+            p {
+                margin-bottom: 1rem;
+            }
+            ul,
+            ol {
+                margin-left: 2rem;
+                margin-bottom: 1rem;
+            }
+            li {
+                margin-bottom: 0.5rem;
+            }
+            code {
+                background: #f4f4f4;
+                padding: 0.2rem 0.4rem;
+                border-radius: 4px;
+                font-size: 0.9em;
+            }
+            pre {
+                background: #1a1a2e;
+                color: #eee;
+                padding: 1rem;
+                border-radius: 8px;
+                overflow-x: auto;
+                margin-bottom: 1rem;
+            }
+            pre code {
+                background: none;
+                padding: 0;
+                color: inherit;
+            }
+            .badge {
+                display: inline-block;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: bold;
+            }
+            .badge-success {
+                background: #d4edda;
+                color: #155724;
+            }
+            .badge-warning {
+                background: #fff3cd;
+                color: #856404;
+            }
+            .badge-danger {
+                background: #f8d7da;
+                color: #721c24;
+            }
+            .badge-info {
+                background: #d1ecf1;
+                color: #0c5460;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 1rem;
+            }
+            th,
+            td {
+                border: 1px solid #ddd;
+                padding: 0.75rem;
+                text-align: left;
+            }
+            th {
+                background: #f8f9fa;
+                font-weight: bold;
+            }
+            tr:nth-child(even) {
+                background: #f9f9f9;
+            }
+            .flow-diagram {
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+            .flow-step {
+                display: flex;
+                align-items: center;
+                padding: 0.75rem 0;
+            }
+            .flow-step::before {
+                content: attr(data-step);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 2rem;
+                height: 2rem;
+                background: #e94560;
+                color: white;
+                border-radius: 50%;
+                font-weight: bold;
+                margin-right: 1rem;
+                flex-shrink: 0;
+            }
+            .file-tree {
+                background: #f8f9fa;
+                border-radius: 8px;
+                padding: 1rem;
+                font-family: monospace;
+            }
+            .file-tree .folder {
+                color: #e94560;
+            }
+            .file-tree .file {
+                color: #333;
+            }
+            .note {
+                background: #e7f3ff;
+                border-left: 4px solid #2196f3;
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+            .warning {
+                background: #fff3cd;
+                border-left: 4px solid #ffc107;
+                padding: 1rem;
+                margin: 1rem 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Sistema SUNAT - Facturin</h1>
+
+        <p>
+            Facturin implementa la integración completa con SUNAT para la
+            facturación electrónica peruana siguiendo el estándar UBL 2.1. Este
+            documento describe la arquitectura, flujo de datos y componentes del
+            sistema.
+        </p>
+
+        <div class="note">
+            <strong>Versión:</strong> 1.0.0 | <strong>Estándar:</strong> UBL 2.1
+            | <strong>Entornos:</strong> Beta y Producción
+        </div>
+
+        <h2>1. Arquitectura General</h2>
+
+        <p>
+            El sistema SUNAT de Facturin sigue una arquitectura de procesamiento
+            asíncrono para nunca bloquear las solicitudes HTTP:
+        </p>
+
+        <div class="flow-diagram">
+            <div class="flow-step" data-step="1">
+                Cliente crea comprobante via API
+            </div>
+            <div class="flow-step" data-step="2">
+                Servicio guarda en BD y encola job
+            </div>
+            <div class="flow-step" data-step="3">Worker genera XML UBL 2.1</div>
+            <div class="flow-step" data-step="4">
+                Worker firma XML con certificado digital
+            </div>
+            <div class="flow-step" data-step="5">
+                Worker envía a SUNAT (sendBill)
+            </div>
+            <div class="flow-step" data-step="6">
+                SUNAT devuelve ticket (async) o CDR (sync)
+            </div>
+            <div class="flow-step" data-step="7">
+                Si async: encola job consultar-cdr
+            </div>
+            <div class="flow-step" data-step="8">
+                Worker consulta estado (getStatus)
+            </div>
+            <div class="flow-step" data-step="9">SUNAT devuelve CDR final</div>
+            <div class="flow-step" data-step="10">
+                Worker actualiza estado en BD
+            </div>
+        </div>
+
+        <h2>2. Estructura de Archivos</h2>
+
+        <div class="file-tree">
+            <pre>apps/api/src/
+├── sunat/
+│   ├── client.ts          <span class="file">Cliente SOAP para BillService</span>
+│   ├── types.ts          <span class="file">TypeScript interfaces</span>
+│   ├── constants.ts      <span class="file">Endpoints, namespaces, catálogos</span>
+│   ├── errors/
+│   │   └── sunat-errors.ts  <span class="file">Mapeo de códigos de error</span>
+│   ├── index.ts
+│   ├── xml/
+│   │   ├── generator.ts  <span class="file">Generador XML UBL 2.1</span>
+│   │   ├── signer.ts     <span class="file">Firma digital XML</span>
+│   │   └── index.ts
+│   └── cdr/
+│       ├── parser.ts     <span class="file">Parser de respuestas CDR</span>
+│       └── index.ts
+├── jobs/
+│   ├── procesos/
+│   │   ├── enviar-comprobante.ts  <span class="file">Job envío a SUNAT</span>
+│   │   └── consultar-cdr.ts      <span class="file">Job consulta CDR</span>
+│   ├── queue.ts          <span class="file">Definición de colas BullMQ</span>
+│   └── worker.ts         <span class="file">Workers de procesamiento</span>
+└── services/
+    └── comprobantes.service.ts  <span class="file">Lógica de negocio</span>
+</pre>
+        </div>
+
+        <h2>3. Tipos de Documentos Soportados</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-success">01</span></td>
+                    <td>Factura</td>
+                    <td>
+                        <span class="badge badge-success">Implementado</span>
+                    </td>
+                    <td>Documento fiscal principal</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">03</span></td>
+                    <td>Boleta</td>
+                    <td>
+                        <span class="badge badge-success">Implementado</span>
+                    </td>
+                    <td>Documento sin derecho a crédito fiscal</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">07</span></td>
+                    <td>Nota de Crédito</td>
+                    <td>
+                        <span class="badge badge-success">Implementado</span>
+                    </td>
+                    <td>Para correcciones y anulaciones</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">08</span></td>
+                    <td>Nota de Débito</td>
+                    <td>
+                        <span class="badge badge-success">Implementado</span>
+                    </td>
+                    <td>Para cargos adicionales</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">09</span></td>
+                    <td>Guía de Remisión</td>
+                    <td><span class="badge badge-warning">Parcial</span></td>
+                    <td>En constants, no en generator</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">40</span></td>
+                    <td>Comprobante de Percepción</td>
+                    <td><span class="badge badge-warning">Parcial</span></td>
+                    <td>En constants, no en generator</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>4. Endpoints SUNAT</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Entorno</th>
+                    <th>Tipo</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-info">Beta</span></td>
+                    <td>SOAP</td>
+                    <td>
+                        <code
+                            >https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService?wsdl</code
+                        >
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">Producción</span></td>
+                    <td>SOAP</td>
+                    <td>
+                        <code
+                            >https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl</code
+                        >
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Operaciones SOAP</h2>
+
+        <h3>5.1 sendBill (Envío de Documento)</h3>
+        <p>Envía un comprobante firmado a SUNAT para procesamiento.</p>
+
+        <pre><code>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"&gt;
+  &lt;soapenv:Header&gt;
+    &lt;wsse:Security&gt;
+      &lt;wsse:UsernameToken&gt;
+        &lt;wsse:Username&gt;USUARIO&lt;/wsse:Username&gt;
+        &lt;wsse:Password&gt;CONTRASEÑA&lt;/wsse:Password&gt;
+      &lt;/wsse:UsernameToken&gt;
+    &lt;/wsse:Security&gt;
+  &lt;/soapenv:Header&gt;
+  &lt;soapenv:Body&gt;
+    &lt;ser:sendBill&gt;
+      &lt;fileName&gt;20480001234-01-F001-00000001.zip&lt;/fileName&gt;
+      &lt;contentFile&gt;BASE64_XML_CONTENT&lt;/contentFile&gt;
+    &lt;/ser:sendBill&gt;
+  &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</code></pre>
+
+        <h3>5.2 getStatus (Consulta de Ticket)</h3>
+        <p>Consulta el estado de un ticket obtenido previamente.</p>
+
+        <pre><code>&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"&gt;
+  &lt;soapenv:Header&gt;
+    &lt;wsse:Security&gt;
+      &lt;wsse:UsernameToken&gt;
+        &lt;wsse:Username&gt;USUARIO&lt;/wsse:Username&gt;
+        &lt;wsse:Password&gt;CONTRASEÑA&lt;/wsse:Password&gt;
+      &lt;/wsse:UsernameToken&gt;
+    &lt;/wsse:Security&gt;
+  &lt;/soapenv:Header&gt;
+  &lt;soapenv:Body&gt;
+    &lt;ser:getStatus&gt;
+      &lt;ticket&gt;NUMERO_TICKET&lt;/ticket&gt;
+    &lt;/ser:getStatus&gt;
+  &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</code></pre>
+
+        <h2>6. Estados del Comprobante</h2>
+
+        <p>
+            El campo <code>sunatEstado</code> en la tabla
+            <code>comprobantes</code> sigue esta máquina de estados:
+        </p>
+
+        <div class="flow-diagram">
+            <div class="flow-step" data-step="1">
+                <code>pendiente</code> - Creado, no enviado
+            </div>
+            <div class="flow-step" data-step="2">
+                <code>enviado</code> - Ticket recibido, esperando CDR
+            </div>
+            <div class="flow-step" data-step="3">
+                <code>aceptado</code> - CDR recibido con status 0
+            </div>
+            <div class="flow-step" data-step="4">
+                <code>rechazado</code> - CDR con código 2000-3999
+            </div>
+            <div class="flow-step" data-step="5">
+                <code>excepcion</code> - Error o código 99
+            </div>
+            <div class="flow-step" data-step="6">
+                <code>anulado</code> - Dado de baja
+            </div>
+            <div class="flow-step" data-step="7">
+                <code>en_proceso</code> - En procesamiento
+            </div>
+        </div>
+
+        <h2>7. Códigos de Estado SUNAT</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Estado</th>
+                    <th>Significado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-success">0</span></td>
+                    <td>ACEPTADO</td>
+                    <td>Documento aceptado por SUNAT</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-info">98</span></td>
+                    <td>EN_PROCESO</td>
+                    <td>SUNAT está procesando el documento</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-warning">99</span></td>
+                    <td>EXCEPCION</td>
+                    <td>Error en el procesamiento</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">2000-2999</span></td>
+                    <td>RECHAZADO</td>
+                    <td>Documento rechazado (error del emisor)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">3000-3999</span></td>
+                    <td>RECHAZADO</td>
+                    <td>Documento rechazado (error del receptor)</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">4000+</span></td>
+                    <td>ACEPTADO</td>
+                    <td>Documento aceptado con observaciones</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>8. Códigos de Error Comunes</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Causa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>1000</code></td>
+                    <td>Error de autenticación</td>
+                    <td>Usuario o contraseña SUNAT incorrectos</td>
+                </tr>
+                <tr>
+                    <td><code>1001</code></td>
+                    <td>Acceso denegado</td>
+                    <td>Cuenta no tiene permisos para el servicio</td>
+                </tr>
+                <tr>
+                    <td><code>1002</code></td>
+                    <td>Error de certificado</td>
+                    <td>Certificado digital inválido o expirado</td>
+                </tr>
+                <tr>
+                    <td><code>1007</code></td>
+                    <td>Timeout</td>
+                    <td>SUNAT no respondió a tiempo</td>
+                </tr>
+                <tr>
+                    <td><code>PARSE_ERROR</code></td>
+                    <td>Error de parsing</td>
+                    <td>No se pudo interpretar la respuesta SUNAT</td>
+                </tr>
+                <tr>
+                    <td><code>SYSTEM_ERROR</code></td>
+                    <td>Error del sistema</td>
+                    <td>Error HTTP o de conexión</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9. Flujo de Datos - Detalle</h2>
+
+        <h3>9.1 Creación de Comprobante</h3>
+        <ol>
+            <li>
+                Cliente envía POST a <code>/v1/comprobantes</code> con los datos
+                del comprobante
+            </li>
+            <li>
+                El servicio valida los datos (serie, número, RUC cliente, IGV)
+            </li>
+            <li>Se guarda en BD con estado <code>pendiente</code></li>
+            <li>
+                Se encola job <code>sunat-send</code> con
+                <code>{comprobanteId, tenantId}</code>
+            </li>
+            <li>Respuesta inmediata al cliente con el comprobante creado</li>
+        </ol>
+
+        <h3>9.2 Procesamiento del Job enviar-comprobante</h3>
+        <ol>
+            <li>Worker obtiene el job de la cola <code>sunat-send</code></li>
+            <li>Recupera comprobante y tenant de la BD</li>
+            <li>Valida que el tenant tenga certificado y credenciales SUNAT</li>
+            <li>Genera XML UBL 2.1 con <code>generateXML()</code></li>
+            <li>
+                Firma el XML con <code>signXML()</code> usando el certificado
+                digital
+            </li>
+            <li>Crea cliente SUNAT y llama a <code>sendBill()</code></li>
+            <li>
+                Parsea la respuesta:
+                <ul>
+                    <li>
+                        <strong>Con ticket:</strong> Almacena ticket, actualiza
+                        estado a <code>enviado</code>, encola
+                        <code>consultar-cdr</code>
+                    </li>
+                    <li>
+                        <strong>CDR directo:</strong> Actualiza estado según
+                        código de respuesta
+                    </li>
+                </ul>
+            </li>
+            <li>Registra resultado en logs</li>
+        </ol>
+
+        <h3>9.3 Procesamiento del Job consultar-cdr</h3>
+        <ol>
+            <li>
+                Worker obtiene job con
+                <code>{comprobanteId, tenantId, ticket}</code>
+            </li>
+            <li>Crea cliente SUNAT y llama a <code>getStatus(ticket)</code></li>
+            <li>
+                Si <code>statusCode === 0</code>: Actualiza estado a
+                <code>aceptado</code>, guarda CDR
+            </li>
+            <li>
+                Si <code>statusCode === 98</code>: Re-encola el job con backoff
+                exponencial (max 20 intentos)
+            </li>
+            <li>
+                Si <code>statusCode >= 2000</code>: Actualiza estado a
+                <code>rechazado</code>
+            </li>
+            <li>
+                Si <code>statusCode === 99</code>: Actualiza estado a
+                <code>excepcion</code>
+            </li>
+        </ol>
+
+        <h2>10. Catálogos SUNAT Utilizados</h2>
+
+        <h3>Catálogo 01 - Tipos de Documento</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>01</td>
+                    <td>Factura</td>
+                </tr>
+                <tr>
+                    <td>03</td>
+                    <td>Boleta</td>
+                </tr>
+                <tr>
+                    <td>07</td>
+                    <td>Nota de Crédito</td>
+                </tr>
+                <tr>
+                    <td>08</td>
+                    <td>Nota de Débito</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Catálogo 06 - Tipos de Documento de Identidad</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>0</td>
+                    <td>Documento identidad</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>DNI</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Carnet de Extranjería</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>RUC</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Pasaporte</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Cédula de Identidad</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Catálogo 07 - Tipo de Afectación IGV</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>10</td>
+                    <td>Gravado - Operación Onerosa</td>
+                </tr>
+                <tr>
+                    <td>20</td>
+                    <td>Exonerado - Operación Onerosa</td>
+                </tr>
+                <tr>
+                    <td>30</td>
+                    <td>Inafecto - Operación Onerosa</td>
+                </tr>
+                <tr>
+                    <td>40</td>
+                    <td>Exportación</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Códigos de Impuestos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Impuesto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1000</td>
+                    <td>IGV (Impuesto General a las Ventas)</td>
+                </tr>
+                <tr>
+                    <td>2000</td>
+                    <td>ISC (Impuesto Selectivo de Consumo)</td>
+                </tr>
+                <tr>
+                    <td>7152</td>
+                    <td>ICBP (Impuesto a la Bolsa Plástica)</td>
+                </tr>
+                <tr>
+                    <td>9999</td>
+                    <td>Otros</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>11. Esquema de Base de Datos</h2>
+
+        <h3>Tabla: tenants</h3>
+        <p>Credenciales y certificados por tenant:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>certificadoDigital</td>
+                    <td>text</td>
+                    <td>Certificado .p12/.pfx en Base64</td>
+                </tr>
+                <tr>
+                    <td>certificadoPassword</td>
+                    <td>text</td>
+                    <td>Contraseña del certificado</td>
+                </tr>
+                <tr>
+                    <td>sunatUsername</td>
+                    <td>text</td>
+                    <td>Usuario SOL SUNAT</td>
+                </tr>
+                <tr>
+                    <td>sunatPassword</td>
+                    <td>text</td>
+                    <td>Contraseña SOL SUNAT</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tabla: comprobantes</h3>
+        <p>Datos del comprobante y estado SUNAT:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>xmlContent</td>
+                    <td>text</td>
+                    <td>XML UBL generado</td>
+                </tr>
+                <tr>
+                    <td>cdrContent</td>
+                    <td>text</td>
+                    <td>Respuesta CDR de SUNAT</td>
+                </tr>
+                <tr>
+                    <td>cdrStatus</td>
+                    <td>text</td>
+                    <td>Estado CDR (ACEPTADO, RECHAZADO, etc)</td>
+                </tr>
+                <tr>
+                    <td>sunatTicket</td>
+                    <td>varchar</td>
+                    <td>Número de ticket SUNAT</td>
+                </tr>
+                <tr>
+                    <td>sunatEstado</td>
+                    <td>text</td>
+                    <td>Estado del proceso SUNAT</td>
+                </tr>
+                <tr>
+                    <td>sunatFechaEnvio</td>
+                    <td>timestamp</td>
+                    <td>Fecha de envío a SUNAT</td>
+                </tr>
+                <tr>
+                    <td>sunatFechaRespuesta</td>
+                    <td>timestamp</td>
+                    <td>Fecha de respuesta CDR</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tabla: sunat_logs</h3>
+        <p>Logs de comunicación con SUNAT (actualmente no implementado):</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>tenantId</td>
+                    <td>uuid</td>
+                    <td>ID del tenant</td>
+                </tr>
+                <tr>
+                    <td>comprobanteId</td>
+                    <td>uuid</td>
+                    <td>ID del comprobante</td>
+                </tr>
+                <tr>
+                    <td>tipoOperacion</td>
+                    <td>text</td>
+                    <td>sendBill o getStatus</td>
+                </tr>
+                <tr>
+                    <td>ticket</td>
+                    <td>varchar</td>
+                    <td>Número de ticket</td>
+                </tr>
+                <tr>
+                    <td>requestXml</td>
+                    <td>text</td>
+                    <td>XML enviado</td>
+                </tr>
+                <tr>
+                    <td>responseXml</td>
+                    <td>text</td>
+                    <td>Respuesta XML</td>
+                </tr>
+                <tr>
+                    <td>errorCode</td>
+                    <td>text</td>
+                    <td>Código de error</td>
+                </tr>
+                <tr>
+                    <td>errorMessage</td>
+                    <td>text</td>
+                    <td>Mensaje de error</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <strong>Nota de Seguridad:</strong> Los campos
+            <code>certificadoPassword</code> y <code>sunatPassword</code> se
+            almacenan sin encriptar. Según las prácticas de seguridad de
+            Facturin, estos campos deberían estar encriptados en la base de
+            datos.
+        </div>
+
+        <h2>12. Colas BullMQ</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Cola</th>
+                    <th>Proceso</th>
+                    <th>Concurrency</th>
+                    <th>Retry</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>sunat-send</code></td>
+                    <td>enviar-comprobante</td>
+                    <td>10</td>
+                    <td>Backoff exponencial</td>
+                </tr>
+                <tr>
+                    <td><code>sunat-consult</code></td>
+                    <td>consultar-cdr</td>
+                    <td>5</td>
+                    <td>Max 20 intentos</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>13. Consideraciones y Limitaciones</h2>
+
+        <h3>Implementado</h3>
+        <ul>
+            <li>
+                Generación de XML UBL 2.1 para facturas, boletas, notas de
+                crédito y débito
+            </li>
+            <li>Firma digital con certificados .p12/.pfx</li>
+            <li>Envío asíncrono via SOAP (sendBill)</li>
+            <li>Consulta de estado via SOAP (getStatus)</li>
+            <li>Procesamiento de CDR (Constancia de Recepción)</li>
+            <li>Manejo de errores con códigos SUNAT</li>
+            <li>Multi-tenancy con credenciales por tenant</li>
+        </ul>
+
+        <h3>No Implementado / Parcial</h3>
+        <ul>
+            <li>Guía de Remisión (09) - en catálogos pero no en generator</li>
+            <li>
+                Comprobante de Percepción (40) - en catálogos pero no en
+                generator
+            </li>
+            <li>Resumen Diario (RC) - no implementado</li>
+            <li>Comunicación de Baja (RA) - no implementado</li>
+            <li>
+                Extracción del ZIP del CDR - el ZIP se guarda sin descomprimir
+            </li>
+            <li>Logging a tabla sunat_logs - esquema existe pero no se usa</li>
+            <li>Validación XSD del XML antes de firmar</li>
+            <li>Ambiente SUNAT por tenant - global de env var</li>
+        </ul>
+
+        <h2>14. Recursos</h2>
+
+        <ul>
+            <li>
+                Portal CPE SUNAT:
+                <a href="https://cpe.sunat.gob.pe">https://cpe.sunat.gob.pe</a>
+            </li>
+            <li>
+                WSDL Beta:
+                <code
+                    >https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService?wsdl</code
+                >
+            </li>
+            <li>
+                WSDL Producción:
+                <code
+                    >https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl</code
+                >
+            </li>
+            <li>
+                Especificación UBL 2.1:
+                <a href="http://docs.oasis-open.org/ubl/os-UBL-2.1/"
+                    >OASIS UBL 2.1</a
+                >
+            </li>
+        </ul>
+
+        <hr />
+        <p style="color: #666; font-size: 0.875rem">
+            Última actualización: 2026-03-25 | Facturin v1.0.0
+        </p>
+    </body>
+</html>
