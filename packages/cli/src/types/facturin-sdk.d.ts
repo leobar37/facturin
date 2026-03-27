@@ -202,7 +202,7 @@ declare module '@facturin/sdk' {
     descripcion: string;
     cantidad: number;
     unidad?: string;
-    precioUnitario: number;
+    valorUnitario: number;
     subtotal: number;
     igv?: number;
     tipoAfectacionIgv?: string;
@@ -232,7 +232,7 @@ declare module '@facturin/sdk' {
       descripcion: string;
       cantidad: number;
       unidad?: string;
-      precioUnitario: number;
+      valorUnitario: number;
       tipoAfectacionIgv?: string;
     }>;
     formaPago?: ComprobanteFormaPago;

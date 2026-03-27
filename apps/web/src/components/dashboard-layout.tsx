@@ -1,91 +1,44 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
-import { useAuth } from '../hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { LayoutDashboard, Building2, Key, Settings, Menu, X, LogOut } from 'lucide-react';
 
-// Navigation items configuration
 const navigationItems = [
   {
     label: 'Dashboard',
     path: '/dashboard',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="3" width="7" height="9" rx="1" />
-        <rect x="14" y="3" width="7" height="5" rx="1" />
-        <rect x="14" y="12" width="7" height="9" rx="1" />
-        <rect x="3" y="16" width="7" height="5" rx="1" />
-      </svg>
-    ),
+    icon: <LayoutDashboard className="w-5 h-5" />,
   },
   {
     label: 'Tenants',
     path: '/tenants',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
+    icon: <Building2 className="w-5 h-5" />,
   },
   {
     label: 'API Keys',
     path: '/api-keys',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
-      </svg>
-    ),
+    icon: <Key className="w-5 h-5" />,
   },
   {
     label: 'Configuración',
     path: '/settings',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
-    ),
+    icon: <Settings className="w-5 h-5" />,
   },
 ];
 
-// Mobile menu toggle component
-function MobileMenuButton({
-  isOpen,
-  onClick,
-}: {
-  isOpen: boolean;
-  onClick: () => void;
-}) {
+function MobileMenuButton({ isOpen, onClick }: { isOpen: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        display: 'none',
-        padding: '0.5rem',
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        color: 'white',
-      }}
-      className="mobile-menu-button"
+      className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
       aria-label="Toggle menu"
     >
-      {isOpen ? (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      ) : (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      )}
+      {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
     </button>
   );
 }
 
-// Sidebar component
 function Sidebar({
   isCollapsed,
   isMobileOpen,
@@ -97,115 +50,56 @@ function Sidebar({
 }) {
   const location = useLocation();
 
-  const navItems = navigationItems.map((item) => {
-    const isActive = location.pathname === item.path;
-    return (
-      <Link
-        key={item.path}
-        to={item.path}
-        onClick={onMobileClose}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          padding: isCollapsed ? '0.75rem' : '0.75rem 1rem',
-          color: isActive ? '#1976d2' : '#6b7280',
-          backgroundColor: isActive ? '#e3f2fd' : 'transparent',
-          borderRadius: '0.375rem',
-          textDecoration: 'none',
-          fontWeight: isActive ? 500 : 400,
-          transition: 'all 0.15s',
-          justifyContent: isCollapsed ? 'center' : 'flex-start',
-        }}
-      >
-        {item.icon}
-        {!isCollapsed && <span>{item.label}</span>}
-      </Link>
-    );
-  });
-
   return (
     <>
-      {/* Mobile overlay */}
       {isMobileOpen && (
-        <div
-          onClick={onMobileClose}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 40,
-          }}
-          className="mobile-overlay"
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onMobileClose} />
       )}
 
-      {/* Sidebar */}
       <aside
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: isCollapsed ? '64px' : '240px',
-          backgroundColor: 'white',
-          borderRight: '1px solid #e5e7eb',
-          padding: '1rem 0',
-          transition: 'width 0.2s ease-in-out',
-          zIndex: 50,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        className="sidebar"
+        className={`
+          fixed top-0 left-0 bottom-0 z-50 bg-white border-r border-gray-200 flex flex-col
+          transition-transform duration-200 ease-in-out
+          ${isCollapsed ? 'w-16' : 'w-60'}
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
       >
-        {/* Logo area */}
-        <div
-          style={{
-            padding: isCollapsed ? '0.5rem' : '0 1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: isCollapsed ? 'center' : 'flex-start',
-          }}
-        >
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '0.5rem',
-              backgroundColor: '#1976d2',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '1rem',
-            }}
-          >
+        <div className={`flex items-center h-16 px-4 border-b border-gray-200 ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
             F
           </div>
-          {!isCollapsed && (
-            <span
-              style={{
-                marginLeft: '0.75rem',
-                fontWeight: 600,
-                fontSize: '1.125rem',
-                color: '#1f2937',
-              }}
-            >
-              Facturin
-            </span>
-          )}
+          {!isCollapsed && <span className="font-semibold text-gray-900">Facturin</span>}
         </div>
 
-        {/* Navigation */}
-        <nav style={{ flex: 1, padding: '0 0.5rem' }}>{navItems}</nav>
+        <nav className="flex-1 p-3 space-y-1">
+          {navigationItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={onMobileClose}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium
+                  transition-colors
+                  ${isActive
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }
+                  ${isCollapsed ? 'justify-center' : ''}
+                `}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
       </aside>
     </>
   );
 }
 
-// Header component
 function Header({
   onMenuToggle,
   isSidebarCollapsed,
@@ -222,124 +116,53 @@ function Header({
 
   return (
     <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: isSidebarCollapsed ? '64px' : '240px',
-        right: 0,
-        height: '64px',
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 1.5rem',
-        transition: 'left 0.2s ease-in-out',
-        zIndex: 30,
-      }}
-      className="header"
+      className={`
+        fixed top-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6
+        transition-all duration-200 z-30
+        ${isSidebarCollapsed ? 'lg:left-16' : 'lg:left-60'}
+      `}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div className="flex items-center gap-4">
         <button
           onClick={onMenuToggle}
-          style={{
-            padding: '0.5rem',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#6b7280',
-            borderRadius: '0.375rem',
-          }}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
           aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
+          <Menu className="w-5 h-5" />
         </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: '#1976d2',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 500,
-              fontSize: '0.875rem',
-            }}
-          >
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm">
             {user?.email ? user.email[0].toUpperCase() : '?'}
           </div>
-          <span style={{ color: '#374151', fontWeight: 500 }}>{user?.email}</span>
+          <span className="text-sm font-medium text-gray-700 hidden sm:block">{user?.email}</span>
         </div>
-        <button
+        <Button
+          variant="destructive"
+          size="sm"
           onClick={handleLogout}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#dc2626',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            cursor: 'pointer',
-            fontWeight: 500,
-            fontSize: '0.875rem',
-            transition: 'background-color 0.15s',
-          }}
+          className="gap-2"
         >
-          Cerrar Sesión
-        </button>
+          <LogOut className="w-4 h-4" />
+          <span className="hidden sm:inline">Cerrar Sesión</span>
+        </Button>
       </div>
     </header>
   );
 }
 
-// Main content area component
-function MainContent({ isSidebarCollapsed }: { isSidebarCollapsed: boolean }) {
-  return (
-    <main
-      style={{
-        marginLeft: isSidebarCollapsed ? '64px' : '240px',
-        marginTop: '64px',
-        padding: '1.5rem',
-        minHeight: 'calc(100vh - 64px)',
-        backgroundColor: '#f9fafb',
-        transition: 'margin-left 0.2s ease-in-out',
-      }}
-      className="main-content"
-    >
-      <Outlet />
-    </main>
-  );
-}
-
-// Dashboard layout component
 export function DashboardLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => !prev);
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      {/* Mobile menu button */}
+    <div className="min-h-screen bg-gray-50">
       <MobileMenuButton isOpen={isMobileMenuOpen} onClick={toggleMobileMenu} />
 
       <Sidebar
@@ -350,33 +173,16 @@ export function DashboardLayout() {
 
       <Header onMenuToggle={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
 
-      <MainContent isSidebarCollapsed={isSidebarCollapsed} />
-
-      {/* Responsive styles */}
-      <style>
-        {`
-          @media (max-width: 768px) {
-            .sidebar {
-              transform: translateX(${isMobileMenuOpen ? '0' : '-100%'});
-              transition: transform 0.2s ease-in-out;
-            }
-            .header {
-              left: 0 !important;
-            }
-            .main-content {
-              margin-left: 0 !important;
-            }
-            .mobile-menu-button {
-              display: block !important;
-            }
-          }
-          @media (min-width: 769px) {
-            .mobile-overlay {
-              display: none !important;
-            }
-          }
+      <main
+        className={`
+          pt-16 min-h-screen transition-all duration-200
+          ${isSidebarCollapsed ? 'lg:pl-16' : 'lg:pl-60'}
         `}
-      </style>
+      >
+        <div className="p-6">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }

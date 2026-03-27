@@ -66,6 +66,24 @@ X-Tenant-ID: uuid-del-tenant
 
 ## 📝 Convenciones de Código
 
+### Bun Runtime
+- **Usar Bun en lugar de npm**: Todos los comandos de package manager deben usar `bun`:
+  ```bash
+  # Correcto ✅
+  bun install
+  bun add <package>
+  bun run <script>
+  bun test
+  
+  # Incorrecto ❌
+  npm install
+  npm run <script>
+  yarn add <package>
+  ```
+- Bun es el runtime oficial del proyecto - verificar que package.json usa Bun
+- Las dependencias deben instalarse con `bun add` (no npm install)
+- Los scripts se ejecutan con `bun run` (no npm run)
+
 ### TypeScript
 - Usar `type` en lugar de `interface` para tipos simples
 - Evitar `any`, usar `unknown` cuando sea necesario

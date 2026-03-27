@@ -6,6 +6,7 @@ import type {
   ComprobanteEstado,
 } from './types.js';
 import { ValidationError } from './errors.js';
+import { validateRuc } from './tenants.js';
 
 /**
  * Validates that tipoComprobante is one of the allowed values
@@ -131,7 +132,7 @@ export class ComprobantesAPI {
    *
    * Note: Totals are calculated automatically by the API based on the details.
    * The API calculates:
-   * - totalGravadas: Sum of (cantidad * precioUnitario) for each detail
+   * - totalGravadas: Sum of (cantidad * valorUnitario) for each detail
    * - totalIgv: 18% of totalGravadas
    * - totalImporte: totalGravadas + totalIgv
    */
@@ -189,6 +190,22 @@ export class ComprobantesAPI {
       ]);
     }
 
+    // Validate RUC when clienteTipoDocumento is '6' (RUC)
+    if (input.clienteTipoDocumento === '6') {
+      const rucValidation = validateRuc(input.clienteNumeroDocumento);
+      if (!rucValidation.isValid) {
+        throw new ValidationError(
+          `Invalid client RUC: ${rucValidation.error}`,
+          [
+            {
+              field: 'clienteNumeroDocumento',
+              message: rucValidation.error || 'Invalid client RUC format',
+            },
+          ]
+        );
+      }
+    }
+
     // Validate clienteNombre
     if (!input.clienteNombre || input.clienteNombre.trim() === '') {
       throw new ValidationError('clienteNombre is required', [
@@ -231,13 +248,13 @@ export class ComprobantesAPI {
         );
       }
 
-      if (detalle.precioUnitario === undefined || detalle.precioUnitario < 0) {
+      if (detalle.valorUnitario === undefined || detalle.valorUnitario < 0) {
         throw new ValidationError(
-          `Detalle ${i + 1}: precioUnitario is required and must be non-negative`,
+          `Detalle ${i + 1}: valorUnitario is required and must be non-negative`,
           [
             {
-              field: `detalles[${i}].precioUnitario`,
-              message: 'precioUnitario is required and must be non-negative',
+              field: `detalles[${i}].valorUnitario`,
+              message: 'valorUnitario is required and must be non-negative',
             },
           ]
         );

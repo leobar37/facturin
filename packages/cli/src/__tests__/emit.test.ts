@@ -12,14 +12,15 @@ function createValidComprobanteJson(overrides: Record<string, unknown> = {}) {
   return {
     serie: 'F001',
     clienteTipoDocumento: '6',
-    clienteNumeroDocumento: '12345678901',
+    // Valid RUC with correct SUNAT checksum (20100178959)
+    clienteNumeroDocumento: '20100178959',
     clienteNombre: 'Empresa ABC SAC',
     clienteDireccion: 'Av. Lima 123, Lima',
     detalles: [
       {
         descripcion: 'Producto A',
         cantidad: 2,
-        precioUnitario: 100.00,
+        valorUnitario: 100.00,
       },
     ],
     ...overrides,
@@ -271,7 +272,7 @@ describe('Emit Commands', () => {
 
       const testFile = join(TEST_FILE_DIR, 'invalid.json');
       writeFileSync(testFile, JSON.stringify(createValidComprobanteJson({
-        detalles: [{ descripcion: 'Test', cantidad: 0, precioUnitario: 10 }]
+        detalles: [{ descripcion: 'Test', cantidad: 0, valorUnitario: 10 }]
       })), 'utf-8');
 
       await expect(emitFactura({ file: testFile }))

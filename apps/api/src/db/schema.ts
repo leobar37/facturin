@@ -14,6 +14,11 @@ export const instanceConfig = pgTable('instance_config', {
   oseSunatPassword: text('ose_sunat_password'),
   instanceName: varchar('instance_name', { length: 255 }).notNull().default('Facturin'),
   instanceUrl: varchar('instance_url', { length: 500 }),
+  // SUNAT Endpoints (configurables, usan valores por defecto si no se configuran)
+  sunatBetaWsdlUrl: varchar('sunat_beta_wsdl_url', { length: 500 }),
+  sunatProdWsdlUrl: varchar('sunat_prod_wsdl_url', { length: 500 }),
+  sunatBetaRestUrl: varchar('sunat_beta_rest_url', { length: 500 }),
+  sunatProdRestUrl: varchar('sunat_prod_rest_url', { length: 500 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

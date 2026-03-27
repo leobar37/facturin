@@ -2,6 +2,7 @@ import { comprobantesRepository, type CreateComprobanteInput, type ComprobanteFi
 import { seriesRepository } from '../repositories/series.repository';
 import { tenantReadinessService } from './tenant-readiness.service';
 import { ValidationError, NotFoundError, ForbiddenError } from '../errors';
+import { enqueueEnviarComprobante } from '../jobs/queue';
 
 // IGV rate (18%)
 const IGV_RATE = 0.18;
@@ -260,6 +261,11 @@ export class ComprobantesService {
     };
 
     const comprobante = await comprobantesRepository.create(createInput);
+
+    // Queue SUNAT send job asynchronously (don't await)
+    enqueueEnviarComprobante(comprobante.id, tenantId).catch((err) => {
+      console.error('Failed to enqueue SUNAT send job:', err);
+    });
 
     return this.toResponse(comprobante);
   }

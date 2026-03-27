@@ -18,6 +18,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: facturin-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - facturin_redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -25,6 +38,8 @@ services:
     container_name: facturin-api
     environment:
       DATABASE_URL: postgresql://facturin:facturin@db:5432/facturin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@facturin.local}
       SUPER_ADMIN_PASSWORD_HASH: ${SUPER_ADMIN_PASSWORD_HASH:-}
@@ -35,18 +50,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
-  inngest:
-    image: inngest/inngest:latest
-    container_name: facturin-inngest
-    environment:
-      DATABASE_URL: postgresql://facturin:facturin@db:5432/facturin
-      INNGEST_REGION: us-east-1
-      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY:-}
-    ports:
-      - '8288:8288'
-    depends_on:
-      - db
+      redis:
+        condition: service_healthy
 
 volumes:
   facturin_data:
+  facturin_redis:

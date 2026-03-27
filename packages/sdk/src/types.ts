@@ -74,7 +74,7 @@ export interface ComprobanteDetalle {
   descripcion: string;
   cantidad: number;
   unidad?: string;
-  precioUnitario: number;
+  valorUnitario: number;
   subtotal: number;
   igv?: number;
   tipoAfectacionIgv?: string;
@@ -103,9 +103,9 @@ export interface Comprobante {
   clienteNumeroDocumento: string;
   clienteNombre: string;
   clienteDireccion?: string;
-  totalGravadas: number;
-  totalIgv: number;
-  totalImporte: number;
+  totalGravadas: string;
+  totalIgv: string;
+  totalImporte: string;
   detalles: ComprobanteDetalle[];
   leyendas: ComprobanteLeyenda[];
   formaPago?: ComprobanteFormaPago;

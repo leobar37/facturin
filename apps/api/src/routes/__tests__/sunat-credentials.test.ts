@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { API_BASE, skipIfApiUnavailable } from '../../utils/test-utils';
+import { createHmac } from 'crypto';
 
 const TEST_TENANT_ID = '11111111-1111-1111-1111-111111111111';
 
@@ -12,6 +13,27 @@ interface ResponseBody {
   sunatPassword?: string;
   password?: string;
 }
+
+/**
+ * Creates a valid JWT token for testing
+ */
+function createTestJWT(): string {
+  const secret = 'development-secret-change-in-production';
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
+  const payload = {
+    sub: 'test-user',
+    email: 'admin@test.com',
+    type: 'admin',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 900
+  };
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = createHmac('sha256', secret).update(headerB64 + '.' + payloadB64).digest('base64url');
+  return headerB64 + '.' + payloadB64 + '.' + sig;
+}
+
+const TEST_JWT = createTestJWT();
 
 // Integration tests for SUNAT Credentials Endpoint
 // These tests require a running database and API server
@@ -26,7 +48,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             password: 'testpassword123',
@@ -46,7 +68,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'TESTUSER',
@@ -68,7 +90,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'TEST',
@@ -89,7 +111,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'THISISAVERYLONGUSERNAMETHATEXCEEDS',
@@ -110,7 +132,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'TEST@USER',
@@ -133,7 +155,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'TESTUSER',
@@ -161,7 +183,7 @@ describe('SUNAT Credentials Endpoint', () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-jwt-token',
+            'Authorization': `Bearer ${TEST_JWT}`,
           },
           body: JSON.stringify({
             username: 'TESTUSER',

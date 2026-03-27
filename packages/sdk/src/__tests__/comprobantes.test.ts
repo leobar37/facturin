@@ -45,9 +45,9 @@ describe('ComprobantesAPI', () => {
           clienteTipoDocumento: '6',
           clienteNumeroDocumento: '20100178959',
           clienteNombre: 'Cliente Test SA',
-          totalGravadas: 100,
-          totalIgv: 18,
-          totalImporte: 118,
+          totalGravadas: '100',
+          totalIgv: '18',
+          totalImporte: '118',
           sunatEstado: 'pendiente',
           createdAt: new Date().toISOString(),
         },
@@ -61,9 +61,9 @@ describe('ComprobantesAPI', () => {
           clienteTipoDocumento: '1',
           clienteNumeroDocumento: '12345678',
           clienteNombre: 'Cliente Persona',
-          totalGravadas: 50,
-          totalIgv: 9,
-          totalImporte: 59,
+          totalGravadas: '50',
+          totalIgv: '9',
+          totalImporte: '59',
           sunatEstado: 'pendiente',
           createdAt: new Date().toISOString(),
         },
@@ -97,9 +97,9 @@ describe('ComprobantesAPI', () => {
           clienteTipoDocumento: '6',
           clienteNumeroDocumento: '20100178959',
           clienteNombre: 'Cliente Test SA',
-          totalGravadas: 100,
-          totalIgv: 18,
-          totalImporte: 118,
+          totalGravadas: '100',
+          totalIgv: '18',
+          totalImporte: '118',
           sunatEstado: 'pendiente',
           createdAt: new Date().toISOString(),
         },
@@ -131,9 +131,9 @@ describe('ComprobantesAPI', () => {
           clienteTipoDocumento: '6',
           clienteNumeroDocumento: '20100178959',
           clienteNombre: 'Cliente Test SA',
-          totalGravadas: 100,
-          totalIgv: 18,
-          totalImporte: 118,
+          totalGravadas: '100',
+          totalIgv: '18',
+          totalImporte: '118',
           sunatEstado: 'aceptado',
           createdAt: new Date().toISOString(),
         },
@@ -185,16 +185,16 @@ describe('ComprobantesAPI', () => {
         clienteNumeroDocumento: '20100178959',
         clienteNombre: 'Cliente Test SA',
         clienteDireccion: 'Av. Principal 123',
-        totalGravadas: 500,
-        totalIgv: 90,
-        totalImporte: 590,
+        totalGravadas: '500',
+        totalIgv: '90',
+        totalImporte: '590',
         detalles: [
           {
             codigo: 'PROD1',
             descripcion: 'Producto de prueba',
             cantidad: 5,
             unidad: 'UN',
-            precioUnitario: 100,
+            valorUnitario: 100,
             subtotal: 500,
             igv: 90,
             tipoAfectacionIgv: '10',
@@ -227,9 +227,9 @@ describe('ComprobantesAPI', () => {
       expect(result.clienteNombre).toBe('Cliente Test SA');
       expect(result.detalles).toHaveLength(1);
       expect(result.detalles[0].descripcion).toBe('Producto de prueba');
-      expect(result.totalGravadas).toBe(500);
-      expect(result.totalIgv).toBe(90);
-      expect(result.totalImporte).toBe(590);
+      expect(result.totalGravadas).toBe('500');
+      expect(result.totalIgv).toBe('90');
+      expect(result.totalImporte).toBe('590');
     });
   });
 
@@ -245,7 +245,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto de prueba',
             cantidad: 5,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -260,9 +260,9 @@ describe('ComprobantesAPI', () => {
         clienteTipoDocumento: '6',
         clienteNumeroDocumento: '20100178959',
         clienteNombre: 'Cliente Test SA',
-        totalGravadas: 500,
-        totalIgv: 90,
-        totalImporte: 590,
+        totalGravadas: '500',
+        totalIgv: '90',
+        totalImporte: '590',
         sunatEstado: 'pendiente',
         createdAt: new Date().toISOString(),
       };
@@ -295,12 +295,12 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto A',
             cantidad: 2,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
           {
             descripcion: 'Producto B',
             cantidad: 3,
-            precioUnitario: 50,
+            valorUnitario: 50,
           },
         ],
       };
@@ -318,9 +318,9 @@ describe('ComprobantesAPI', () => {
         // 2*100 + 3*50 = 350 total gravado
         // IGV 18% = 63
         // Total = 413
-        totalGravadas: 350,
-        totalIgv: 63,
-        totalImporte: 413,
+        totalGravadas: '350',
+        totalIgv: '63',
+        totalImporte: '413',
         sunatEstado: 'pendiente',
         createdAt: new Date().toISOString(),
       };
@@ -336,9 +336,9 @@ describe('ComprobantesAPI', () => {
       const result = await client.comprobantes.create(createInput);
 
       // API calculates totals
-      expect(result.totalGravadas).toBe(350);
-      expect(result.totalIgv).toBe(63);
-      expect(result.totalImporte).toBe(413);
+      expect(result.totalGravadas).toBe('350');
+      expect(result.totalIgv).toBe('63');
+      expect(result.totalImporte).toBe('413');
     });
 
     it('should validate tipoComprobante', async () => {
@@ -352,7 +352,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -373,7 +373,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -397,7 +397,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -418,7 +418,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -439,7 +439,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -475,7 +475,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -513,7 +513,7 @@ describe('ComprobantesAPI', () => {
             {
               descripcion: 'Producto',
               cantidad: 1,
-              precioUnitario: 100,
+              valorUnitario: 100,
             },
           ],
         };
@@ -528,9 +528,9 @@ describe('ComprobantesAPI', () => {
           clienteTipoDocumento: '6',
           clienteNumeroDocumento: '20100178959',
           clienteNombre: 'Cliente Test SA',
-          totalGravadas: 100,
-          totalIgv: 18,
-          totalImporte: 118,
+          totalGravadas: '100',
+          totalIgv: '18',
+          totalImporte: '118',
           sunatEstado: 'pendiente',
           createdAt: new Date().toISOString(),
         };
@@ -560,7 +560,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
       };
@@ -576,9 +576,9 @@ describe('ComprobantesAPI', () => {
         clienteNumeroDocumento: '20100178959',
         clienteNombre: 'Cliente Test SA',
         clienteDireccion: 'Av. Principal 123, Lima',
-        totalGravadas: 100,
-        totalIgv: 18,
-        totalImporte: 118,
+        totalGravadas: '100',
+        totalIgv: '18',
+        totalImporte: '118',
         sunatEstado: 'pendiente',
         createdAt: new Date().toISOString(),
       };
@@ -607,7 +607,7 @@ describe('ComprobantesAPI', () => {
           {
             descripcion: 'Producto',
             cantidad: 1,
-            precioUnitario: 100,
+            valorUnitario: 100,
           },
         ],
         formaPago: {
@@ -626,9 +626,9 @@ describe('ComprobantesAPI', () => {
         clienteTipoDocumento: '6',
         clienteNumeroDocumento: '20100178959',
         clienteNombre: 'Cliente Test SA',
-        totalGravadas: 100,
-        totalIgv: 18,
-        totalImporte: 118,
+        totalGravadas: '100',
+        totalIgv: '18',
+        totalImporte: '118',
         sunatEstado: 'pendiente',
         createdAt: new Date().toISOString(),
       };

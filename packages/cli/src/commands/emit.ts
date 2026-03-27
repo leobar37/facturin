@@ -140,8 +140,8 @@ function validateComprobanteInput(input: CreateComprobanteInput): void {
     if (detalle.cantidad === undefined || detalle.cantidad <= 0) {
       throw new CLIError(`detalles[${i}].cantidad must be greater than 0`, 'INVALID_FIELD');
     }
-    if (detalle.precioUnitario === undefined || detalle.precioUnitario < 0) {
-      throw new CLIError(`detalles[${i}].precioUnitario is required and must be non-negative`, 'INVALID_FIELD');
+    if (detalle.valorUnitario === undefined || detalle.valorUnitario < 0) {
+      throw new CLIError(`detalles[${i}].valorUnitario is required and must be non-negative`, 'INVALID_FIELD');
     }
   }
 }
@@ -226,7 +226,7 @@ async function promptForComprobanteData(tipoComprobante: TipoComprobante): Promi
       detalles.push({
         descripcion: descripcion.trim(),
         cantidad: parseFloat(cantidadStr),
-        precioUnitario: parseFloat(precioStr),
+        valorUnitario: parseFloat(precioStr),
       });
 
       const more = await questionAsync(rl, '¿Agregar otro item? (s/n): ');
@@ -357,14 +357,14 @@ JSON File Format:
 {
   "serie": "F001",
   "clienteTipoDocumento": "6",
-  "clienteNumeroDocumento": "12345678901",
+  "clienteNumeroDocumento": "20100178959",
   "clienteNombre": "Empresa ABC SAC",
   "clienteDireccion": "Av. Lima 123, Lima",
   "detalles": [
     {
       "descripcion": "Producto A",
       "cantidad": 2,
-      "precioUnitario": 100.00
+      "valorUnitario": 100.00
     }
   ]
 }

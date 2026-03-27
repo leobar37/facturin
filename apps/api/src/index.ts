@@ -57,7 +57,7 @@ const _app: any = new Elysia()
   .use(v1TenantReadinessRoutes)
   .use(v1ComprobantesRoutes)
   // Start server
-  .listen(3001, ({ hostname, port }) => {
+  .listen(Number(process.env.PORT) || 3001, ({ hostname, port }) => {
     console.log(`🚀 Facturin API running at http://${hostname}:${port}`);
     console.log(`📚 Swagger docs at http://${hostname}:${port}/swagger`);
   });

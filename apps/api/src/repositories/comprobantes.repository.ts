@@ -1,6 +1,7 @@
 import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { comprobantes } from '../db/schema';
+import type { ComprobanteSunatEstado } from '../sunat/types';
 
 export interface ComprobanteEntity {
   id: string;
@@ -204,6 +205,76 @@ export class ComprobantesRepository {
         )
       );
     return Number(result?.maxNumero) || 0;
+  }
+
+  async updateXmlContent(id: string, xmlContent: string): Promise<void> {
+    await db
+      .update(comprobantes)
+      .set({ xmlContent })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async updateSunatTicket(id: string, ticket: string): Promise<void> {
+    await db
+      .update(comprobantes)
+      .set({
+        sunatTicket: ticket,
+        sunatEstado: 'enviado' as ComprobanteSunatEstado,
+      })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async updateCdr(
+    id: string,
+    estado: ComprobanteSunatEstado,
+    cdrContent: string,
+    cdrStatus: string
+  ): Promise<void> {
+    await db
+      .update(comprobantes)
+      .set({
+        cdrContent,
+        cdrStatus,
+        sunatEstado: estado,
+        sunatFechaRespuesta: new Date(),
+      })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async updateHash(id: string, hash: string): Promise<void> {
+    await db
+      .update(comprobantes)
+      .set({ hash })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async updateSunatEstado(id: string, estado: ComprobanteSunatEstado): Promise<void> {
+    await db
+      .update(comprobantes)
+      .set({ sunatEstado: estado })
+      .where(eq(comprobantes.id, id));
+  }
+
+  async findBySunatTicket(ticket: string): Promise<ComprobanteEntity | null> {
+    const [result] = await db
+      .select()
+      .from(comprobantes)
+      .where(eq(comprobantes.sunatTicket, ticket))
+      .limit(1);
+    return result ? mapToComprobanteEntity(result) : null;
+  }
+
+  async findPendientesByTenant(tenantId: string): Promise<ComprobanteEntity[]> {
+    const results = await db
+      .select()
+      .from(comprobantes)
+      .where(
+        and(
+          eq(comprobantes.tenantId, tenantId),
+          eq(comprobantes.sunatEstado, 'pendiente')
+        )
+      );
+    return results.map(mapToComprobanteEntity);
   }
 }
 
