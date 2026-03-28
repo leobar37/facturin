@@ -22,7 +22,7 @@ services:
     image: redis:7-alpine
     container_name: facturin-redis
     ports:
-      - '6379:6379'
+      - '6380:6379'
     volumes:
       - facturin_redis:/data
     healthcheck:
@@ -39,14 +39,14 @@ services:
     environment:
       DATABASE_URL: postgresql://facturin:facturin@db:5432/facturin
       REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_PORT: 6380
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@facturin.local}
       SUPER_ADMIN_PASSWORD_HASH: ${SUPER_ADMIN_PASSWORD_HASH:-}
       OSE_SUNAT_USERNAME: ${OSE_SUNAT_USERNAME:-}
       OSE_SUNAT_PASSWORD: ${OSE_SUNAT_PASSWORD:-}
     ports:
-      - '3001:3001'
+      - '3102:3102'
     depends_on:
       db:
         condition: service_healthy

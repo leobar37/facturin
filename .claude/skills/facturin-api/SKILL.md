@@ -11,7 +11,7 @@ API de facturación electrónica SUNAT para Perú, construida con Bun + Elysia +
 
 ### Base URL
 ```
-http://localhost:3001
+http://localhost:3102
 ```
 
 ### Authentication
