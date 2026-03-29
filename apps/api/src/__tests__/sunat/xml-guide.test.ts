@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'bun:test';
 import { generateDespatchAdviceXML } from '../../sunat/xml/guide';
-import type { XmlGuiaInput } from '../../sunat/xml/guide';
+import type { XmlGuiaInput } from '../../sunat/types';
 
 describe('XML Guide Generator', () => {
   describe('generateDespatchAdviceXML', () => {

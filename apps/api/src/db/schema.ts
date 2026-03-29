@@ -149,6 +149,36 @@ export const sunatLogs = pgTable('sunat_logs', {
 });
 
 // ============================================================================
+// webhooks - Webhooks para notificaciones de estado
+// ============================================================================
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  url: varchar('url', { length: 500 }).notNull(),
+  secret: varchar('secret', { length: 255 }).notNull(),
+  eventos: jsonb('eventos').$type<string[]>().notNull().default([]),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// webhook_deliveries - Registro de envíos de webhooks
+// ============================================================================
+export const webhookDeliveries = pgTable('webhook_deliveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  webhookId: uuid('webhook_id').notNull().references(() => webhooks.id, { onDelete: 'cascade' }),
+  evento: varchar('evento', { length: 50 }).notNull(),
+  payload: jsonb('payload').notNull(),
+  responseStatus: integer('response_status'),
+  responseBody: text('response_body'),
+  errorMessage: text('error_message'),
+  attemptCount: integer('attempt_count').notNull().default(1),
+  deliveredAt: timestamp('delivered_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// ============================================================================
 // Relations
 // ============================================================================
 export const instanceConfigRelations = relations(instanceConfig, ({}) => ({}));
@@ -159,6 +189,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   series: many(series),
   comprobantes: many(comprobantes),
   sunatLogs: many(sunatLogs),
+  webhooks: many(webhooks),
 }));
 
 export const seriesRelations = relations(series, ({ one }) => ({
@@ -187,6 +218,21 @@ export const sunatLogsRelations = relations(sunatLogs, ({ one }) => ({
   }),
 }));
 
+export const webhooksRelations = relations(webhooks, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [webhooks.tenantId],
+    references: [tenants.id],
+  }),
+  deliveries: many(webhookDeliveries),
+}));
+
+export const webhookDeliveriesRelations = relations(webhookDeliveries, ({ one }) => ({
+  webhook: one(webhooks, {
+    fields: [webhookDeliveries.webhookId],
+    references: [webhooks.id],
+  }),
+}));
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -207,3 +253,9 @@ export type NewComprobante = typeof comprobantes.$inferInsert;
 
 export type SunatLog = typeof sunatLogs.$inferSelect;
 export type NewSunatLog = typeof sunatLogs.$inferInsert;
+
+export type Webhook = typeof webhooks.$inferSelect;
+export type NewWebhook = typeof webhooks.$inferInsert;
+
+export type WebhookDelivery = typeof webhookDeliveries.$inferSelect;
+export type NewWebhookDelivery = typeof webhookDeliveries.$inferInsert;

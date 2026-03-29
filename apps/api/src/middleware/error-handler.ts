@@ -3,46 +3,44 @@ import { AppError } from '../errors';
 
 export const errorHandler = (app: Elysia) =>
   app.onError(({ error, set }) => {
-    console.error('Error:', error);
-
     if (error instanceof AppError) {
       set.status = error.statusCode;
       return {
-        success: false,
-        error: {
-          message: error.message,
-          code: error.code,
-        },
+        error: error.message,
+        code: error.code,
       };
     }
 
     // Handle Elysia TypeBox validation errors
-    if (error && typeof error === 'object' && 'type' in error) {
+    if (error && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
       
-      if (errorObj.type === 'validation') {
+      // TypeBox validation errors have code: "VALIDATION" and type: "body"
+      if (errorObj.code === 'VALIDATION' && errorObj.type === 'body') {
         set.status = 400;
         
-        // Check if it's a body validation error for required fields
-        const on = errorObj.on as string | undefined;
-        const property = errorObj.property as string | undefined;
-        const message = errorObj.message as string | undefined;
+        // Extract error information from valueError
+        const valueError = errorObj.valueError as Record<string, unknown> | undefined;
         
-        if (on === 'body' && property && message) {
-          // If a required field is missing/empty, return our custom error message
+        // Note: valueError has 'path' not 'property'
+        const path = (valueError?.path as string | undefined) || '';
+        const message = (valueError?.message as string | undefined) || '';
+        const summary = (valueError?.summary as string | undefined) || '';
+        
+        // Check if it's a body validation error for missing username or password
+        if (path === '/username' || path === '/password') {
+          // Check if it's a missing/undefined error
           if (message.includes('Expected string') || message.includes('undefined')) {
-            if (property === '/username' || property === '/password') {
-              return {
-                error: 'SUNAT username and password are required',
-                code: 'SUNAT_CREDENTIALS_REQUIRED',
-              };
-            }
+            return {
+              error: 'SUNAT username and password are required',
+              code: 'SUNAT_CREDENTIALS_REQUIRED',
+            };
           }
         }
         
         // Generic validation error response
         return {
-          error: message || 'Validation error',
+          error: summary || message || 'Validation error',
           code: 'VALIDATION_ERROR',
         };
       }
@@ -51,10 +49,7 @@ export const errorHandler = (app: Elysia) =>
     // Default error response
     set.status = 500;
     return {
-      success: false,
-      error: {
-        message: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      },
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
     };
   });

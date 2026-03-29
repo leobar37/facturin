@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,8 +18,8 @@ export function LoginForm() {
     },
   });
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [generalError, setGeneralError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   const onSubmit = async (data: LoginInput) => {
     setIsLoading(true);
@@ -71,7 +71,7 @@ export function LoginForm() {
               </div>
             )}
 
-            <FormInput<LoginInput>
+            <FormInput
               name="email"
               label="Email"
               type="email"
@@ -81,7 +81,7 @@ export function LoginForm() {
               required
             />
 
-            <FormPassword<LoginInput>
+            <FormPassword
               name="password"
               label="Contraseña"
               placeholder="Ingrese su contraseña"

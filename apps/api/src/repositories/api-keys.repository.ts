@@ -51,15 +51,16 @@ export class ApiKeysRepository {
     limit?: number;
     offset?: number;
   }): Promise<ApiKeyEntity[]> {
+    // Admin listing: return ALL keys (active and revoked) for full visibility
     const results = await (async () => {
       if (options?.limit && options?.offset) {
-        return db.select().from(apiKeys).where(eq(apiKeys.isActive, true)).orderBy(desc(apiKeys.createdAt)).limit(options.limit).offset(options.offset);
+        return db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt)).limit(options.limit).offset(options.offset);
       } else if (options?.limit) {
-        return db.select().from(apiKeys).where(eq(apiKeys.isActive, true)).orderBy(desc(apiKeys.createdAt)).limit(options.limit);
+        return db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt)).limit(options.limit);
       } else if (options?.offset) {
-        return db.select().from(apiKeys).where(eq(apiKeys.isActive, true)).orderBy(desc(apiKeys.createdAt)).offset(options.offset);
+        return db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt)).offset(options.offset);
       }
-      return db.select().from(apiKeys).where(eq(apiKeys.isActive, true)).orderBy(desc(apiKeys.createdAt));
+      return db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
     })();
     return results.map(mapToApiKeyEntity);
   }

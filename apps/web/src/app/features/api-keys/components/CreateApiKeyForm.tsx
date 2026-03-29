@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,7 @@ export function CreateApiKeyForm({ onSuccess, onCancel, isPending }: CreateApiKe
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormInput<CreateApiKeyInput>
+        <FormInput
           name="name"
           label="Nombre de la API Key"
           placeholder="Ej: Producción API"
@@ -36,7 +35,7 @@ export function CreateApiKeyForm({ onSuccess, onCancel, isPending }: CreateApiKe
           disabled={isPending}
         />
 
-        <FormInput<CreateApiKeyInput>
+        <FormInput
           name="expiresAt"
           label="Fecha de Expiración (opcional)"
           type="date"

@@ -18,7 +18,7 @@ Facturin es un sistema de **facturación electrónica SUNAT** open source para P
 - **Frontend:** React Router v7
 - **ORM:** Drizzle ORM
 - **Database:** PostgreSQL 16
-- **Jobs:** Inngest
+- **Jobs:** BullMQ (Redis)
 - **Auth:** JWT + API Keys
 
 ### Estructura (Monorepo)
@@ -182,9 +182,9 @@ interface RequestContext {
 Nunca bloquear el request HTTP. Siempre usar jobs:
 ```typescript
 // Correcto ✅
-await inngest.send({
-  name: 'comprobante/creado',
-  data: { comprobanteId, tenantId }
+await comprobanteQueue.add('enviar', {
+  comprobanteId,
+  tenantId
 });
 return { status: 'pendiente' };
 
@@ -215,10 +215,11 @@ const result = await sunatClient.sendBill(...); // Bloquea
 3. Actualizar tipos si es necesario
 4. Crear repository en `apps/api/src/repositories/`
 
-### Nuevo job Inngest
-1. Crear función en `apps/api/src/inngest/functions/`
-2. Exportar desde `apps/api/src/inngest/index.ts`
-3. Manejar errores con retries apropiados
+### Nuevo job BullMQ
+1. Crear processor en `apps/api/src/jobs/processes/`
+2. Registrar en `apps/api/src/jobs/worker.ts`
+3. Agregar a la cola en `apps/api/src/jobs/queue.ts`
+4. Manejar errores con retries apropiados
 
 ## 🔍 Debugging
 
@@ -227,15 +228,15 @@ const result = await sunatClient.sendBill(...); // Bloquea
 # Ver logs de SUNAT
 docker-compose logs -f api | grep "SUNAT"
 
-# Ver jobs Inngest
-docker-compose logs -f inngest
+# Ver jobs BullMQ (Redis)
+docker-compose logs -f redis
 
 # Database queries
 docker-compose exec db psql -U facturin -c "SELECT * FROM comprobantes LIMIT 10;"
 ```
 
 ### Herramientas
-- **Inngest Dashboard:** http://localhost:8288
+- **BullMQ:** Requiere Redis (incluido en docker-compose)
 - **API Docs:** http://localhost:3000/docs (cuando implementemos Swagger)
 - **Drizzle Studio:** `bun run db:studio`
 

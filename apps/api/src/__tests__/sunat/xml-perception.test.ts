@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'bun:test';
 import { generatePerceptionXML } from '../../sunat/xml/perception';
-import type { XmlPercepcionInput } from '../../sunat/xml/perception';
+import type { XmlPercepcionInput } from '../../sunat/types';
 
 describe('XML Perception Generator', () => {
   describe('generatePerceptionXML', () => {

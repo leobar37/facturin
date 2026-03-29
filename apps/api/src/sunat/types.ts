@@ -181,7 +181,7 @@ export interface SunatLogEntry {
 export type GuideTypeCode = '09' | '31'; // 09=RGuide, 31=Transport guide
 
 export interface XmlGuiaInput {
-  tipoComprobante: '09';
+  tipoComprobante: '09' | '31';
   serie: string;
   numero: number;
   fechaEmision: string; // ISO date
