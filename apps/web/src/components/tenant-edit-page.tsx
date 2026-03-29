@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useTenantById } from '../hooks/use-tenants';
 import { api } from '../lib/api';
@@ -49,20 +49,22 @@ export function TenantEditPage() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Initialize form data when tenant loads
-  if (tenant && !isInitialized) {
-    setFormData({
-      razonSocial: tenant.razonSocial || '',
-      nombreComercial: tenant.nombreComercial || '',
-      contactoEmail: tenant.contactoEmail || '',
-      contactoPhone: tenant.contactoPhone || '',
-      direccion: tenant.direccion?.direccion || '',
-      departamento: tenant.direccion?.departamento || '',
-      provincia: tenant.direccion?.provincia || '',
-      distrito: tenant.direccion?.distrito || '',
-      ubigeo: tenant.direccion?.ubigeo || '',
-    });
-    setIsInitialized(true);
-  }
+  useEffect(() => {
+    if (tenant && !isInitialized) {
+      setFormData({
+        razonSocial: tenant.razonSocial || '',
+        nombreComercial: tenant.nombreComercial || '',
+        contactoEmail: tenant.contactoEmail || '',
+        contactoPhone: tenant.contactoPhone || '',
+        direccion: tenant.direccion?.direccion || '',
+        departamento: tenant.direccion?.departamento || '',
+        provincia: tenant.direccion?.provincia || '',
+        distrito: tenant.direccion?.distrito || '',
+        ubigeo: tenant.direccion?.ubigeo || '',
+      });
+      setIsInitialized(true);
+    }
+  }, [tenant, isInitialized]);
 
   const updateField = (field: keyof EditFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
