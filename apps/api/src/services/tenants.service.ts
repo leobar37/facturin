@@ -13,14 +13,6 @@ export interface ReadinessCheck {
   };
 }
 
-/**
- * Encrypt data using AES-256-GCM
- * @deprecated Use encrypt from '../lib/crypto' directly
- */
-function encryptData(data: string): string {
-  return encrypt(data);
-}
-
 export interface CreateTenantInput {
   ruc: string;
   razonSocial: string;
@@ -238,8 +230,8 @@ export class TenantsService {
     }
 
     // Encrypt the certificate before storing
-    const encryptedCertificate = encryptData(certificateData);
-    const encryptedPassword = encryptData(password);
+    const encryptedCertificate = encrypt(certificateData);
+    const encryptedPassword = encrypt(password);
 
     // Update the tenant with the certificate
     await tenantsRepository.updateCertificate(tenantId, {
@@ -318,7 +310,7 @@ export class TenantsService {
     }
 
     // Encrypt the password before storing
-    const encryptedPassword = encryptData(password);
+    const encryptedPassword = encrypt(password);
 
     // Update the tenant with the SUNAT credentials
     await tenantsRepository.updateSunatCredentials(tenantId, {
