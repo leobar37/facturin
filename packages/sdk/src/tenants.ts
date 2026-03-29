@@ -1,4 +1,5 @@
 import type { FacturinClient } from './client.js';
+import { AdminClient } from './admin-client.js';
 import type {
   Tenant,
   CreateTenantInput,
@@ -49,17 +50,19 @@ export interface ListTenantsResult {
   offset: number;
 }
 
+type ClientInterface = FacturinClient | AdminClient;
+
 export class TenantsAPI {
-  constructor(private readonly client: FacturinClient) {}
+  constructor(
+    private readonly client: ClientInterface,
+    private readonly isAdmin: boolean = false
+  ) {}
 
   /**
-   * List all tenants (admin endpoint - requires JWT auth, not API key)
+   * List all tenants
    * 
-   * NOTE: This endpoint is for admin use and requires super admin JWT authentication.
-   * For tenant-specific operations, use the tenant ID in the SDK config.
-   * 
-   * The API returns { data: Tenant[], pagination: {...} } but the client unwraps
-   * the data property, so we reconstruct the full response here.
+   * When used with AdminClient, requires JWT auth and returns paginated results.
+   * When used with FacturinClient (tenant mode), this is not applicable.
    */
   async list(options?: ListTenantsOptions): Promise<ListTenantsResult> {
     const params: Record<string, string | number | undefined> = {};
@@ -74,23 +77,30 @@ export class TenantsAPI {
       params.offset = options.offset;
     }
 
-    // The client will return just the tenants array because it unwraps { data: T }
-    // We need to fetch with a raw request to get the full pagination response
-    // For now, return just the array with pagination info derived from params
     const limit = options?.limit || 50;
     const offset = options?.offset || 0;
 
-    // Use get with the pagination wrapper type - client will unwrap to Tenant[]
-    const tenants = await this.client.get<Tenant[]>('/api/admin/tenants', {
+    // Use AdminClient for admin operations - it returns full response with pagination
+    if (this.isAdmin && this.client instanceof AdminClient) {
+      const response = await this.client.get<{ data: Tenant[]; pagination: { total: number; limit: number; offset: number } }>(
+        '/api/admin/tenants',
+        { params }
+      );
+      return {
+        tenants: response.data,
+        total: response.pagination.total,
+        limit: response.pagination.limit,
+        offset: response.pagination.offset,
+      };
+    }
+
+    // Fallback for tenant client (not typical for admin operations)
+    const tenants = await (this.client as FacturinClient).get<Tenant[]>('/api/admin/tenants', {
       params,
     });
-
-    // Since the client unwraps the response, we return what we can
-    // In a real scenario, you might want to fetch twice - once for data, once for pagination
-    // Or modify the API to return a non-standard format that doesn't get unwrapped
     return {
       tenants,
-      total: -1, // Unknown since client unwraps the pagination info
+      total: -1,
       limit,
       offset,
     };
@@ -100,7 +110,10 @@ export class TenantsAPI {
    * Get a tenant by ID
    */
   async get(id: string): Promise<Tenant> {
-    return this.client.get<Tenant>(`/api/admin/tenants/${id}`);
+    if (this.isAdmin && this.client instanceof AdminClient) {
+      return this.client.get<Tenant>(`/api/admin/tenants/${id}`);
+    }
+    return (this.client as FacturinClient).get<Tenant>(`/api/admin/tenants/${id}`);
   }
 
   /**
@@ -118,7 +131,10 @@ export class TenantsAPI {
       );
     }
 
-    return this.client.post<Tenant>('/api/admin/tenants', input);
+    if (this.isAdmin && this.client instanceof AdminClient) {
+      return this.client.post<Tenant>('/api/admin/tenants', input);
+    }
+    return (this.client as FacturinClient).post<Tenant>('/api/admin/tenants', input);
   }
 
   /**
@@ -128,13 +144,19 @@ export class TenantsAPI {
     id: string,
     data: Partial<Omit<CreateTenantInput, 'ruc'>> & { isActive?: boolean }
   ): Promise<Tenant> {
-    return this.client.put<Tenant>(`/api/admin/tenants/${id}`, data);
+    if (this.isAdmin && this.client instanceof AdminClient) {
+      return this.client.put<Tenant>(`/api/admin/tenants/${id}`, data);
+    }
+    return (this.client as FacturinClient).put<Tenant>(`/api/admin/tenants/${id}`, data);
   }
 
   /**
    * Deactivate a tenant
    */
   async deactivate(id: string): Promise<{ id: string; isActive: boolean }> {
-    return this.client.delete<{ id: string; isActive: boolean }>(`/api/admin/tenants/${id}`);
+    if (this.isAdmin && this.client instanceof AdminClient) {
+      return this.client.delete<{ id: string; isActive: boolean }>(`/api/admin/tenants/${id}`);
+    }
+    return (this.client as FacturinClient).delete<{ id: string; isActive: boolean }>(`/api/admin/tenants/${id}`);
   }
 }

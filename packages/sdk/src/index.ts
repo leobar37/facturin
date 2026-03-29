@@ -1,8 +1,16 @@
 // Main SDK entry point
 
-// Export client
+// Export FacturinClient for tenant-scoped operations
 export { FacturinClient } from './client.js';
 export type { ClientConfig, RequestOptions } from './client.js';
+
+// Export AdminClient for admin operations
+export { AdminClient } from './admin-client.js';
+export type { AdminClientConfig, AdminCredentials, AuthToken } from './admin-client.js';
+
+// Export StatsAPI
+export { StatsAPI } from './stats.js';
+export type { AdminStats } from './stats.js';
 
 // Export TenantsAPI and helpers
 export { TenantsAPI, validateRuc } from './tenants.js';
@@ -19,7 +27,7 @@ export type {
   ListComprobantesResult,
 } from './comprobantes.js';
 
-// Export errors
+// Export errors (re-exported from admin-client for convenience)
 export {
   FacturinError,
   AuthenticationError,
