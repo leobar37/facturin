@@ -12,7 +12,8 @@
  *   ADMIN_PASSWORD=your-password bun run scripts/bootstrap.ts
  */
 
-import { existsSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import bcrypt from 'bcrypt';
 
 // Default admin credentials
@@ -46,9 +47,16 @@ async function main() {
 
   // Step 3: Create .env.local if it doesn't exist
   const envLocalPath = join(process.cwd(), '.env.local');
-  if (!existsSync(envLocalPath)) {
+  if (existsSync(envLocalPath)) {
+    console.log('📝 Step 3: .env.local already exists — skipping creation\n');
+  } else {
     console.log('📝 Step 3: Creating .env.local file...');
-    console.log('   (skipped - file already exists or will be created manually)\n');
+    const envContent = `# Facturin Super Admin Configuration
+SUPER_ADMIN_EMAIL=${adminEmail}
+SUPER_ADMIN_PASSWORD_HASH=${hash}
+`;
+    writeFileSync(envLocalPath, envContent);
+    console.log(`   Created: ${envLocalPath}\n`);
   }
 
   console.log('✅ Bootstrap complete!');
