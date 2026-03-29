@@ -1,7 +1,7 @@
 import * as readline from 'node:readline';
-import { requireAuth, CLIError } from './auth.js';
+import { requireAdminAuth, CLIError } from './auth.js';
 import { loadConfig } from '../config.js';
-import type { CreateTenantInput, Tenant } from '@facturin/sdk';
+import type { CreateTenantInput, Tenant, ListTenantsOptions as SDKListOptions } from '@facturin/sdk';
 import { validateRuc } from '@facturin/sdk';
 
 // ============================================================================
@@ -14,12 +14,8 @@ export interface ListTenantsOptions {
   offset?: number;
 }
 
-interface ListTenantsResult {
-  tenants: Tenant[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+// Re-export SDK types for use in command handlers
+export type { ListTenantsOptions as SDKListTenantsOptions };
 
 interface RucValidationResult {
   isValid: boolean;
@@ -31,20 +27,19 @@ interface RucValidationResult {
 // ============================================================================
 
 export async function listTenants(options: ListTenantsOptions = {}): Promise<void> {
-  const client = requireAuth();
+  const client = requireAdminAuth();
 
   console.log('Fetching tenants...');
 
   try {
-    const result = await (client.tenants.list as any)({
+    const sdkOptions: SDKListOptions = {
       search: options.search,
       limit: options.limit,
       offset: options.offset,
-    });
+    };
+    const result = await client.tenants.list(sdkOptions);
 
-    const { tenants } = result as ListTenantsResult;
-
-    if (tenants.length === 0) {
+    if (result.tenants.length === 0) {
       console.log('\nNo tenants found.');
       return;
     }
@@ -52,7 +47,7 @@ export async function listTenants(options: ListTenantsOptions = {}): Promise<voi
     // Print table header
     console.log('\n' + formatTable([
       ['ID', 'RUC', 'Razón Social', 'Activo', 'Cert.', 'SUNAT'],
-      ...tenants.map((t: Tenant) => [
+      ...result.tenants.map((t: Tenant) => [
         t.id.substring(0, 8) + '...',
         t.ruc,
         truncate(t.razonSocial, 30),
@@ -62,7 +57,7 @@ export async function listTenants(options: ListTenantsOptions = {}): Promise<voi
       ])
     ]));
 
-    console.log(`\nTotal: ${tenants.length} tenant(s)`);
+    console.log(`\nTotal: ${result.tenants.length} tenant(s)`);
   } catch (error) {
     if (error instanceof CLIError) {
       throw error;
@@ -89,7 +84,7 @@ export interface CreateTenantOptions {
 }
 
 export async function createTenant(options: CreateTenantOptions = {}): Promise<void> {
-  const client = requireAuth();
+  const client = requireAdminAuth();
   let input: CreateTenantInput;
 
   if (options.interactive || (!options.ruc && !options.razonSocial)) {

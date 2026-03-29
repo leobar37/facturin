@@ -14,6 +14,41 @@ declare module '@facturin/sdk' {
     getBaseUrl(): string;
   }
 
+  // AdminClient for admin operations
+  export class AdminClient {
+    constructor(config: AdminClientConfig);
+    readonly tenants: TenantsAPI;
+    readonly stats: StatsAPI;
+    login(credentials: AdminCredentials): Promise<AuthToken>;
+    logout(): void;
+    isAuthenticated(): boolean;
+    getToken(): string | null;
+    getBaseUrl(): string;
+    get<T>(endpoint: string, options?: RequestOptions): Promise<T>;
+    post<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T>;
+    put<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T>;
+    delete<T>(endpoint: string, options?: RequestOptions): Promise<T>;
+  }
+
+  export interface AdminClientConfig {
+    baseUrl: string;
+  }
+
+  export interface AdminCredentials {
+    email: string;
+    password: string;
+  }
+
+  export interface AuthToken {
+    token: string;
+    type: 'Bearer';
+    expiresIn: string;
+    user: {
+      email: string;
+      role: string;
+    };
+  }
+
   export interface ClientConfig {
     baseUrl: string;
     apiKey: string;
@@ -56,25 +91,52 @@ declare module '@facturin/sdk' {
     constructor(message?: string);
   }
 
+  // StatsAPI types
+  export class StatsAPI {
+    constructor(client: AdminClient);
+    get(): Promise<AdminStats>;
+  }
+
+  export interface AdminStats {
+    tenants: {
+      total: number;
+      active: number;
+      inactive: number;
+    };
+    apiKeys: {
+      total: number;
+      active: number;
+    };
+    comprobantes: {
+      total: number;
+      byEstado: Record<string, number>;
+    };
+    series: {
+      total: number;
+    };
+  }
+
   // TenantsAPI types
   export class TenantsAPI {
-    constructor(client: FacturinClient);
+    constructor(client: FacturinClient | AdminClient, isAdmin?: boolean);
     list(options?: ListTenantsOptions): Promise<ListTenantsResult>;
     create(data: CreateTenantInput): Promise<Tenant>;
     get(id: string): Promise<Tenant>;
+    update(id: string, data: Partial<CreateTenantInput> & { isActive?: boolean }): Promise<Tenant>;
+    deactivate(id: string): Promise<{ id: string; isActive: boolean }>;
   }
 
   export interface ListTenantsOptions {
-    limit?: number;
-    page?: number;
     search?: string;
+    limit?: number;
+    offset?: number;
   }
 
   export interface ListTenantsResult {
-    data: Tenant[];
+    tenants: Tenant[];
     total: number;
-    page: number;
     limit: number;
+    offset: number;
   }
 
   export interface Tenant {
@@ -159,7 +221,7 @@ declare module '@facturin/sdk' {
 
   export interface ListComprobantesOptions {
     limit?: number;
-    page?: number;
+    offset?: number;
     tipoComprobante?: TipoComprobante;
     serie?: string;
     fechaDesde?: string;
@@ -170,8 +232,8 @@ declare module '@facturin/sdk' {
   export interface ListComprobantesResult {
     data: Comprobante[];
     total: number;
-    page: number;
     limit: number;
+    offset: number;
   }
 
   export interface Comprobante {
@@ -279,5 +341,5 @@ declare module '@facturin/sdk' {
   }
 
   // Helper functions
-  export function validateRuc(ruc: string): boolean;
+  export function validateRuc(ruc: string): { isValid: boolean; error?: string };
 }

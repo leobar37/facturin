@@ -5,6 +5,7 @@ export interface CLIConfig {
   baseUrl?: string;
   apiKey?: string;
   tenantId?: string;
+  adminToken?: string;
 }
 
 const CONFIG_DIR = '.facturin';
@@ -59,13 +60,12 @@ export function clearConfig(): void {
   const configPath = getConfigPath();
 
   if (existsSync(configPath)) {
-    // Only clear apiKey, keep baseUrl and tenantId
+    // Clear all credentials but keep baseUrl
     const existingConfig = loadConfig();
     
-    // Write directly without merging, to ensure apiKey is removed
+    // Write directly without merging, to ensure all credentials are removed
     const newConfig: CLIConfig = {
       baseUrl: existingConfig.baseUrl,
-      tenantId: existingConfig.tenantId,
     };
     
     // Ensure directory exists
@@ -78,6 +78,17 @@ export function clearConfig(): void {
 }
 
 export function hasCredentials(): boolean {
+  const config = loadConfig();
+  // Check for either tenant (apiKey) or admin (adminToken) credentials
+  return Boolean((config.apiKey || config.adminToken) && config.baseUrl);
+}
+
+export function isAdminAuthenticated(): boolean {
+  const config = loadConfig();
+  return Boolean(config.adminToken && config.baseUrl);
+}
+
+export function isTenantAuthenticated(): boolean {
   const config = loadConfig();
   return Boolean(config.apiKey && config.baseUrl);
 }

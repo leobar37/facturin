@@ -46,25 +46,26 @@ describe('Tenant Commands', () => {
       await expect(listTenants()).rejects.toThrow('Not logged in');
     });
 
-    it('should require tenantId in config', async () => {
+    it('should require admin auth', async () => {
       const { listTenants } = await import('../commands/tenants.js');
 
+      // Setup with tenant credentials but no admin token
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
         apiKey: 'sk_test_123',
+        tenantId: 'tenant-123',
       }), 'utf-8');
 
-      await expect(listTenants()).rejects.toThrow('No tenant configured');
+      await expect(listTenants()).rejects.toThrow('Not logged in as admin');
     });
 
     it('should list tenants and display table format', async () => {
       const { listTenants } = await import('../commands/tenants.js');
 
-      // Setup authenticated config
+      // Setup authenticated admin config
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       // Mock the SDK client
@@ -93,7 +94,7 @@ describe('Tenant Commands', () => {
         ok: true,
         status: 200,
         headers: new Map([['content-type', 'application/json']]),
-        json: async () => mockTenants,
+        json: async () => ({ data: mockTenants, pagination: { total: 2, limit: 50, offset: 0 } }),
       });
 
       let output = '';
@@ -117,8 +118,7 @@ describe('Tenant Commands', () => {
 
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       // Mock global fetch for empty tenant list
@@ -127,7 +127,7 @@ describe('Tenant Commands', () => {
         ok: true,
         status: 200,
         headers: new Map([['content-type', 'application/json']]),
-        json: async () => [],
+        json: async () => ({ data: [], pagination: { total: 0, limit: 50, offset: 0 } }),
       });
 
       let output = '';
@@ -151,15 +151,17 @@ describe('Tenant Commands', () => {
       await expect(createTenant()).rejects.toThrow('Not logged in');
     });
 
-    it('should require tenantId in config', async () => {
+    it('should require admin auth', async () => {
       const { createTenant } = await import('../commands/tenants.js');
 
+      // Setup with tenant credentials but no admin token
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
         apiKey: 'sk_test_123',
+        tenantId: 'tenant-123',
       }), 'utf-8');
 
-      await expect(createTenant()).rejects.toThrow('No tenant configured');
+      await expect(createTenant()).rejects.toThrow('Not logged in as admin');
     });
 
     it('should require RUC in non-interactive mode (VAL-CLI-007)', async () => {
@@ -167,8 +169,7 @@ describe('Tenant Commands', () => {
 
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       await expect(createTenant({
@@ -182,8 +183,7 @@ describe('Tenant Commands', () => {
 
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       await expect(createTenant({
@@ -197,8 +197,7 @@ describe('Tenant Commands', () => {
 
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       // Invalid RUC - not 11 digits
@@ -219,8 +218,7 @@ describe('Tenant Commands', () => {
 
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       // Valid RUC for testing (20100178959 - a RUC that passes checksum)
@@ -263,11 +261,10 @@ describe('Tenant Commands', () => {
     it('should display success message after creating tenant', async () => {
       const { createTenant } = await import('../commands/tenants.js');
 
-      // Config with tenantId so requireAuth succeeds
+      // Config with admin token
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify({
         baseUrl: 'http://localhost:3100',
-        apiKey: 'sk_test_auth',
-        tenantId: 'tenant-123',
+        adminToken: 'jwt_admin_token',
       }), 'utf-8');
 
       const mockTenant = {
@@ -412,22 +409,17 @@ describe('RUC Validation', () => {
     // Test a known valid RUC (these pass the SUNAT checksum)
     // RUC 20100178959 passes the checksum algorithm
     const result = validateRuc('20100178959');
-    // @ts-expect-error - validateRuc return type not properly resolved
     expect(result.isValid).toBe(true);
   });
 
   it('should reject RUC with wrong length', () => {
-    // @ts-expect-error - validateRuc return type not properly resolved
     expect(validateRuc('1234567890').isValid).toBe(false);
-    // @ts-expect-error - validateRuc return type not properly resolved
     expect(validateRuc('123456789012').isValid).toBe(false);
-    // @ts-expect-error - validateRuc return type not properly resolved
     expect(validateRuc('').isValid).toBe(false);
   });
 
   it('should reject RUC with wrong checksum', () => {
     // RUC 12345678901 has wrong checksum digit
-    // @ts-expect-error - validateRuc return type not properly resolved
     expect(validateRuc('12345678901').isValid).toBe(false);
   });
 });

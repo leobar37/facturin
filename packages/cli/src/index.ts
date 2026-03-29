@@ -135,14 +135,15 @@ async function handleSeriesCommand(args: string[]): Promise<void> {
 
 interface LoginOptions {
   baseUrl: string;
-  apiKey: string;
+  apiKey?: string;
   tenantId?: string;
+  email?: string;
+  password?: string;
 }
 
 function parseLoginOptions(args: string[]): LoginOptions {
   const options: LoginOptions = {
     baseUrl: '',
-    apiKey: '',
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -160,6 +161,14 @@ function parseLoginOptions(args: string[]): LoginOptions {
       case '--tenant-id':
       case '-t':
         options.tenantId = args[++i] || '';
+        break;
+      case '--email':
+      case '-e':
+        options.email = args[++i] || '';
+        break;
+      case '--password':
+      case '-p':
+        options.password = args[++i] || '';
         break;
       case '--help':
       case '-h':
@@ -259,15 +268,28 @@ Usage: facturin login [options]
 
 Authenticate with the Facturin API and save credentials locally.
 
-Options:
+Two authentication modes are supported:
+  1. Admin login (email/password) - for tenant management operations
+  2. Tenant login (API key) - for series and emit operations
+
+Admin Login:
   -u, --base-url <url>     API base URL (required)
-  -k, --api-key <key>      API key (required)
-  -t, --tenant-id <id>     Tenant ID (optional)
+  -e, --email <email>     Admin email (required for admin login)
+  -p, --password <pass>    Admin password (required for admin login)
+  -h, --help               Show this help message
+
+Tenant Login:
+  -u, --base-url <url>     API base URL (required)
+  -k, --api-key <key>      API key (required for tenant login)
+  -t, --tenant-id <id>     Tenant ID (required for tenant operations)
   -h, --help               Show this help message
 
 Examples:
-  facturin login -u http://localhost:3100 -k sk_live_xxx -t uuid
-  facturin login --base-url https://api.example.com --api-key sk_live_xxx
+  Admin login:
+  facturin login -u http://localhost:3102 -e admin@facturin.local -p admin123
+  
+  Tenant login:
+  facturin login -u http://localhost:3102 -k sk_live_xxx -t uuid
 `);
 }
 

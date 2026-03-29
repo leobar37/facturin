@@ -109,11 +109,12 @@ describe('Config Management', () => {
   });
 
   describe('clearConfig', () => {
-    it('should clear only apiKey while preserving baseUrl and tenantId', () => {
+    it('should clear all credentials but preserve baseUrl', () => {
       const testConfig = {
         baseUrl: 'http://localhost:3100',
         apiKey: 'sk_test_789',
         tenantId: 'tenant-xyz',
+        adminToken: 'jwt_token',
       };
       
       writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig), 'utf-8');
@@ -124,8 +125,9 @@ describe('Config Management', () => {
       const config = JSON.parse(content);
       
       expect(config.baseUrl).toBe('http://localhost:3100');
-      expect(config.tenantId).toBe('tenant-xyz');
+      expect(config.tenantId).toBeUndefined();
       expect(config.apiKey).toBeUndefined();
+      expect(config.adminToken).toBeUndefined();
     });
 
     it('should do nothing when no config exists', () => {
@@ -148,10 +150,18 @@ describe('Config Management', () => {
       expect(hasCredentials()).toBe(false);
     });
 
-    it('should return true when both baseUrl and apiKey are set', () => {
+    it('should return true when both baseUrl and apiKey are set (tenant mode)', () => {
       saveConfig({
         baseUrl: 'http://localhost:3100',
         apiKey: 'sk_test_123',
+      });
+      expect(hasCredentials()).toBe(true);
+    });
+
+    it('should return true when both baseUrl and adminToken are set (admin mode)', () => {
+      saveConfig({
+        baseUrl: 'http://localhost:3100',
+        adminToken: 'jwt_token',
       });
       expect(hasCredentials()).toBe(true);
     });
@@ -200,13 +210,12 @@ describe('Login/Logout Commands (VAL-CLI-001, VAL-CLI-002, VAL-CLI-003)', () => 
     })).rejects.toThrow('baseUrl is required');
   });
 
-  it('should validate that apiKey is required (VAL-CLI-001)', async () => {
+  it('should validate that either apiKey or email/password is required (VAL-CLI-001)', async () => {
     const { login } = await import('../commands/auth.js');
     
     await expect(login({
       baseUrl: 'http://localhost:3100',
-      apiKey: '',
-    })).rejects.toThrow('apiKey is required');
+    })).rejects.toThrow('Either --api-key (for tenant login) or --email/--password (for admin login) is required');
   });
 
   it('should test connection before saving credentials (VAL-CLI-002)', async () => {
@@ -303,7 +312,7 @@ describe('Login/Logout Commands (VAL-CLI-001, VAL-CLI-002, VAL-CLI-003)', () => 
   it('should logout and clear credentials (VAL-CLI-003)', async () => {
     const { login, logout } = await import('../commands/auth.js');
     
-    // First login
+    // First login with tenant credentials
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).fetch = vi.fn().mockResolvedValueOnce({
       ok: true,
@@ -325,8 +334,8 @@ describe('Login/Logout Commands (VAL-CLI-001, VAL-CLI-002, VAL-CLI-003)', () => 
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
     
     expect(config.apiKey).toBeUndefined();
+    expect(config.tenantId).toBeUndefined();
     expect(config.baseUrl).toBe('http://localhost:3100');
-    expect(config.tenantId).toBe('tenant-789');
   });
 
   it('should handle logout when not logged in (VAL-CLI-003)', async () => {
