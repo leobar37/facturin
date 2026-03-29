@@ -1,11 +1,20 @@
 import { Link } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAdminStats } from '@/hooks/use-admin-stats';
 
 export function DashboardPage() {
+  const { data: stats, isLoading, error } = useAdminStats();
+
   return (
     <div className="font-sans">
       <h1 className="text-2xl font-semibold text-gray-900 mb-2">Dashboard</h1>
       <p className="text-gray-500 mb-8">Bienvenido al panel de administración de Facturin.</p>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <p className="text-red-600 text-sm">Error al cargar las estadísticas. Por favor, intente de nuevo.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
         <Card>
@@ -13,7 +22,16 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Tenants</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">-</p>
+            {isLoading ? (
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+            ) : (
+              <>
+                <p className="text-3xl font-bold text-gray-900">{stats?.tenants.total ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {stats?.tenants.active ?? 0} activos, {stats?.tenants.inactive ?? 0} inactivos
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -22,7 +40,11 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Comprobantes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">-</p>
+            {isLoading ? (
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+            ) : (
+              <p className="text-3xl font-bold text-gray-900">{stats?.comprobantes.total ?? 0}</p>
+            )}
           </CardContent>
         </Card>
 
@@ -31,7 +53,16 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">API Keys</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">-</p>
+            {isLoading ? (
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+            ) : (
+              <>
+                <p className="text-3xl font-bold text-gray-900">{stats?.apiKeys.total ?? 0}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {stats?.apiKeys.active ?? 0} activas
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

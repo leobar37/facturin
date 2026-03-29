@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { FormInput, FormPassword } from '@/components/forms';
 import { loginSchema, type LoginInput } from '../schemas/login-schema';
+import { api } from '@/lib/api';
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -26,23 +27,13 @@ export function LoginForm() {
     setGeneralError(null);
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await api.post<{
+        token: string;
+        user: { email: string; role: string };
+      }>('/api/auth/login', data, { token: null });
 
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || responseData.error || 'Error al iniciar sesión');
-      }
-
-      localStorage.setItem('auth_token', responseData.token);
-      localStorage.setItem('auth_user', JSON.stringify(responseData.user));
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('auth_user', JSON.stringify(response.user));
 
       navigate('/dashboard');
     } catch (error) {

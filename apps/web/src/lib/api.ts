@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3102';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -22,8 +22,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
+    const errorData = await response.json().catch(() => null);
+    // Handle both {message: "..."} and {error: "...", code: "..."} formats
+    const errorMessage = errorData?.message || errorData?.error || `HTTP ${response.status}`;
+    throw new Error(errorMessage);
   }
 
   return response.json();
