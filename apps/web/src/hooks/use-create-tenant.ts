@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3100';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3102';
 
 export interface CreateTenantInput {
   ruc: string;
