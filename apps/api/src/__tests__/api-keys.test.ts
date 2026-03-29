@@ -12,11 +12,13 @@ describe('ApiKeysService', () => {
   describe('generateApiKey', () => {
     it('should generate a key with sk_live_ prefix', () => {
       // Access private method via prototype
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { key } = (service as any).generateApiKey();
       expect(key.startsWith('sk_live_')).toBe(true);
     });
 
     it('should generate a key with 32 hex characters after prefix', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { key } = (service as any).generateApiKey();
       const suffix = key.replace('sk_live_', '');
       expect(suffix.length).toBe(64); // 32 bytes = 64 hex chars
@@ -24,7 +26,9 @@ describe('ApiKeysService', () => {
     });
 
     it('should generate unique keys each time', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { key: key1 } = (service as any).generateApiKey();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { key: key2 } = (service as any).generateApiKey();
       expect(key1).not.toBe(key2);
     });
@@ -32,6 +36,7 @@ describe('ApiKeysService', () => {
 
   describe('hashApiKey', () => {
     it('should produce a SHA256 hash (64 hex characters)', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hash = (service as any).hashApiKey('sk_live_' + 'x'.repeat(64));
       expect(hash.length).toBe(64);
       expect(/^[a-f0-9]+$/.test(hash)).toBe(true);
@@ -39,13 +44,17 @@ describe('ApiKeysService', () => {
 
     it('should produce consistent hash for same input', () => {
       const input = 'sk_live_' + 'x'.repeat(64);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hash1 = (service as any).hashApiKey(input);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hash2 = (service as any).hashApiKey(input);
       expect(hash1).toBe(hash2);
     });
 
     it('should produce different hash for different inputs', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hash1 = (service as any).hashApiKey('sk_live_' + 'x'.repeat(64));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hash2 = (service as any).hashApiKey('sk_live_' + 'y'.repeat(64));
       expect(hash1).not.toBe(hash2);
     });
@@ -100,8 +109,16 @@ describe('ApiKeysService', () => {
   describe('create response shape', () => {
     it('should return object with required fields when creating', async () => {
       // Mock the repository
-      const mockRepo = {
-        create: async (data: any) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mockRepo: any = {
+        create: async (data: {
+          name: string;
+          keyHash: string;
+          keyPrefix: string;
+          permissions: string[];
+          expiresAt: Date | null;
+          isActive: boolean;
+        }) => ({
           id: 'test-uuid',
           name: data.name,
           keyHash: data.keyHash,
