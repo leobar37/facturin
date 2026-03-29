@@ -1,0 +1,60 @@
+{
+  "milestone": "foundation",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": { "passed": true, "command": "bun test", "exitCode": 0, "details": "341 pass, 0 fail" },
+    "typecheck": { "passed": true, "command": "bun run typecheck", "exitCode": 0, "details": "0 errors across all packages" },
+    "lint": { "passed": true, "command": "bun run lint", "exitCode": 0, "details": "0 errors, 31 pre-existing warnings in jobs/queue.ts and jobs/worker.ts" }
+  },
+  "reviewsSummary": {
+    "total": 4,
+    "passed": 2,
+    "failed": 2,
+    "failedFeatures": [
+      "foundation-runtime-manifest-and-port-normalization",
+      "foundation-database-bootstrap-and-admin-auth"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "foundation-database-bootstrap-and-admin-auth",
+      "severity": "blocking",
+      "description": "Bootstrap script (apps/api/scripts/bootstrap.ts) uses `join` from `path` module on line 48 but never imports it, causing ReferenceError at runtime when Step 3 is executed. Additionally, the Step 3 conditional logic is inverted - it checks if file does NOT exist but then logs 'skipped' instead of creating it."
+    },
+    {
+      "featureId": "foundation-runtime-manifest-and-port-normalization",
+      "severity": "blocking",
+      "description": "Diff contains significant scope creep not in feature description: (1) index.ts added statsRoutes and webhooksRoutes imports/registration, (2) queue.ts added WEBHOOK queue and getWebhookQueue(), (3) .env.example added ENCRYPTION_KEY. Only port normalization was in scope."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add a 'Port Management' or 'Runtime Configuration' convention section documenting which files must be updated when ports change (docker-compose.yml, index.ts, queue.ts, .env.example, services.yaml, skill files). Currently workers must discover this through grep.",
+      "evidence": "foundation-runtime-manifest-and-port-normalization feature required port changes but AGENTS.md had no documented convention about which files need updating when ports change.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add testing conventions section documenting global state cleanup patterns (save/restore globalThis.fetch in afterEach) for tests that mock global state.",
+      "evidence": "foundation-full-test-suite-isolation implemented a sensible pattern for globalThis.fetch cleanup that is not documented in AGENTS.md testing section.",
+      "isSystemic": false
+    },
+    {
+      "target": "skills/backend-worker.md",
+      "suggestion": "Remove references to .factory/library/architecture.md, .factory/library/contracts.md, .factory/library/environment.md, and .factory/services.yaml since these files do not exist in this mission context.",
+      "evidence": "foundation-database-bootstrap-and-admin-auth worker encountered ENOENT errors when trying to read these files referenced by the backend-worker skill.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills/integration-worker.md",
+      "suggestion": "Clarify how workers should handle pre-existing validator failures. The current procedure says to 'run validators before handoff' but doesn't specify acceptable results when pre-existing failures exist vs failures caused by the feature.",
+      "evidence": "foundation-runtime-manifest-and-port-normalization worker ran validators that failed but declared success without clarifying which errors were pre-existing vs caused by changes.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}
