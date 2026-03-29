@@ -48,7 +48,9 @@ interface ParsedCertificate {
 type XmlCryptoModule = {
   SignedXml: new (options?: { signatureAlgorithm?: string }) => {
     signature: { id?: string };
-    keyInfoProvider: { getKey: () => Buffer };
+    keyInfoProvider: {
+      getKey: () => Buffer;
+    };
     signingKey: Buffer;
     addReference: (ref: { xpath: string }) => void;
     computeSignature: (xml: string, options: { prefix?: string; location?: { reference: string; action: string } }) => void;
@@ -57,7 +59,16 @@ type XmlCryptoModule = {
     checkSignature: (xml: string) => boolean;
     validationErrors: string[];
   };
-  FileKeyInfo: new () => { getKey: () => Buffer };
+  FileKeyInfo: new () => {
+    getKey: () => Buffer;
+  };
+};
+
+// Extended type for SignedXml that allows dynamic keyInfoProvider assignment
+type SignedXmlInstance = XmlCryptoModule['SignedXml']['prototype'] & {
+  keyInfoProvider: {
+    getKey: () => Buffer;
+  };
 };
 
 /**
@@ -163,7 +174,7 @@ export async function signXML(input: XmlSignerInput): Promise<XmlSignerOutput> {
 
     // Set the key info - xml-crypto needs the certificate for verification
     sig.keyInfoProvider = new FileKeyInfo();
-    (sig as any).keyInfoProvider.getKey = () => {
+    (sig as SignedXmlInstance).keyInfoProvider.getKey = () => {
       return Buffer.from(certificate, 'base64');
     };
 
@@ -249,7 +260,7 @@ export async function verifyXMLSignature(
 
     // Set the key info
     sig.keyInfoProvider = new FileKeyInfo();
-    (sig as any).keyInfoProvider.getKey = () => {
+    (sig as SignedXmlInstance).keyInfoProvider.getKey = () => {
       return Buffer.from(certificateBase64, 'base64');
     };
 

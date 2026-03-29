@@ -1,6 +1,6 @@
 // SUNAT-specific types for electronic invoicing
 
-export type SunatEnvironment = 'beta' | 'production';
+export type SunatEnvironment = 'beta' | 'production' | 'mock';
 
 export type DocumentType =
   | '01' // Factura

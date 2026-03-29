@@ -8,19 +8,23 @@
  * Workers are created lazily via the getSunatSendWorker/getSunatConsultWorker functions.
  */
 
+import type { Worker as BullMQWorker, Job as BullMQJob } from 'bullmq';
+import type { Processor } from 'bullmq';
 import { redisConnection, QUEUE_NAMES } from './queue';
 import { processEnviarComprobante } from './processes/enviar-comprobante';
 import { processConsultarCdr } from './processes/consultar-cdr';
 import type { EnviarComprobanteJobData, ConsultarCdrJobData } from './queue';
+import type { EnviarComprobanteResult } from './processes/enviar-comprobante';
+import type { ConsultarCdrResult } from './processes/consultar-cdr';
 
-// Lazy-loaded worker instances (using any type until BullMQ is installed)
-let _sunatSendWorker: any = null;
-let _sunatConsultWorker: any = null;
+// Lazy-loaded worker instances with proper BullMQ Worker types
+let _sunatSendWorker: BullMQWorker<EnviarComprobanteJobData, EnviarComprobanteResult> | null = null;
+let _sunatConsultWorker: BullMQWorker<ConsultarCdrJobData, ConsultarCdrResult> | null = null;
 
 /**
  * Get or create the SUNAT send worker
  */
-export async function getSunatSendWorker(): Promise<any> {
+export async function getSunatSendWorker(): Promise<BullMQWorker<EnviarComprobanteJobData, EnviarComprobanteResult>> {
   if (_sunatSendWorker) {
     return _sunatSendWorker;
   }
@@ -28,20 +32,22 @@ export async function getSunatSendWorker(): Promise<any> {
   // Dynamic import to handle case where BullMQ is not yet installed
   const { Worker } = await import('bullmq');
 
-  _sunatSendWorker = new Worker(
-    QUEUE_NAMES.SUNAT_SEND,
-    async (job: any) => {
-      console.log(`[sunat-send] Processing job ${job.id}: ${job.name}`);
+  const processor: Processor<EnviarComprobanteJobData, EnviarComprobanteResult> = async (job) => {
+    console.log(`[sunat-send] Processing job ${job.id}: ${job.name}`);
 
-      try {
-        const result = await processEnviarComprobante(job.data as EnviarComprobanteJobData);
-        console.log(`[sunat-send] Job ${job.id} completed successfully`);
-        return result;
-      } catch (error) {
-        console.error(`[sunat-send] Job ${job.id} failed:`, error);
-        throw error; // Re-throw to trigger BullMQ retry mechanism
-      }
-    },
+    try {
+      const result = await processEnviarComprobante(job.data);
+      console.log(`[sunat-send] Job ${job.id} completed successfully`);
+      return result;
+    } catch (error) {
+      console.error(`[sunat-send] Job ${job.id} failed:`, error);
+      throw error; // Re-throw to trigger BullMQ retry mechanism
+    }
+  };
+
+  _sunatSendWorker = new Worker<EnviarComprobanteJobData, EnviarComprobanteResult>(
+    QUEUE_NAMES.SUNAT_SEND,
+    processor,
     {
       connection: redisConnection,
       concurrency: 10,
@@ -49,18 +55,18 @@ export async function getSunatSendWorker(): Promise<any> {
   );
 
   // Event handlers
-  _sunatSendWorker.on('completed', (job: any) => {
+  _sunatSendWorker.on('completed', (job: BullMQJob<EnviarComprobanteJobData, EnviarComprobanteResult>) => {
     console.log(`[sunat-send] Job ${job.id} completed at ${new Date().toISOString()}`);
   });
 
-  _sunatSendWorker.on('failed', (job: any, err: Error) => {
+  _sunatSendWorker.on('failed', (job: BullMQJob<EnviarComprobanteJobData, EnviarComprobanteResult> | undefined, err: Error) => {
     console.error(
       `[sunat-send] Job ${job?.id} failed after ${job?.attemptsMade} attempts:`,
       err.message
     );
   });
 
-  _sunatSendWorker.on('progress', (job: any, progress: any) => {
+  _sunatSendWorker.on('progress', (job: BullMQJob<EnviarComprobanteJobData, EnviarComprobanteResult>, progress: unknown) => {
     console.log(`[sunat-send] Job ${job.id} progress: ${JSON.stringify(progress)}`);
   });
 
@@ -70,7 +76,7 @@ export async function getSunatSendWorker(): Promise<any> {
 /**
  * Get or create the SUNAT consult worker
  */
-export async function getSunatConsultWorker(): Promise<any> {
+export async function getSunatConsultWorker(): Promise<BullMQWorker<ConsultarCdrJobData, ConsultarCdrResult>> {
   if (_sunatConsultWorker) {
     return _sunatConsultWorker;
   }
@@ -78,20 +84,22 @@ export async function getSunatConsultWorker(): Promise<any> {
   // Dynamic import to handle case where BullMQ is not yet installed
   const { Worker } = await import('bullmq');
 
-  _sunatConsultWorker = new Worker(
-    QUEUE_NAMES.SUNAT_CONSULT,
-    async (job: any) => {
-      console.log(`[sunat-consult] Processing job ${job.id}: ${job.name}`);
+  const processor: Processor<ConsultarCdrJobData, ConsultarCdrResult> = async (job) => {
+    console.log(`[sunat-consult] Processing job ${job.id}: ${job.name}`);
 
-      try {
-        const result = await processConsultarCdr(job.data as ConsultarCdrJobData);
-        console.log(`[sunat-consult] Job ${job.id} completed successfully`);
-        return result;
-      } catch (error) {
-        console.error(`[sunat-consult] Job ${job.id} failed:`, error);
-        throw error; // Re-throw to trigger BullMQ retry mechanism
-      }
-    },
+    try {
+      const result = await processConsultarCdr(job.data);
+      console.log(`[sunat-consult] Job ${job.id} completed successfully`);
+      return result;
+    } catch (error) {
+      console.error(`[sunat-consult] Job ${job.id} failed:`, error);
+      throw error; // Re-throw to trigger BullMQ retry mechanism
+    }
+  };
+
+  _sunatConsultWorker = new Worker<ConsultarCdrJobData, ConsultarCdrResult>(
+    QUEUE_NAMES.SUNAT_CONSULT,
+    processor,
     {
       connection: redisConnection,
       concurrency: 5,
@@ -99,18 +107,18 @@ export async function getSunatConsultWorker(): Promise<any> {
   );
 
   // Event handlers
-  _sunatConsultWorker.on('completed', (job: any) => {
+  _sunatConsultWorker.on('completed', (job: BullMQJob<ConsultarCdrJobData, ConsultarCdrResult>) => {
     console.log(`[sunat-consult] Job ${job.id} completed at ${new Date().toISOString()}`);
   });
 
-  _sunatConsultWorker.on('failed', (job: any, err: Error) => {
+  _sunatConsultWorker.on('failed', (job: BullMQJob<ConsultarCdrJobData, ConsultarCdrResult> | undefined, err: Error) => {
     console.error(
       `[sunat-consult] Job ${job?.id} failed after ${job?.attemptsMade} attempts:`,
       err.message
     );
   });
 
-  _sunatConsultWorker.on('progress', (job: any, progress: any) => {
+  _sunatConsultWorker.on('progress', (job: BullMQJob<ConsultarCdrJobData, ConsultarCdrResult>, progress: unknown) => {
     console.log(`[sunat-consult] Job ${job.id} progress: ${JSON.stringify(progress)}`);
   });
 

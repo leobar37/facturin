@@ -10,7 +10,7 @@
  * 6. On success, update cdrContent
  */
 
-import { SunatClient, createSunatClient } from '../../sunat/client';
+import { createSunatClientForEnvironment } from '../../sunat/client';
 import type {
   SunatEnvironment,
   ComprobanteSunatEstado,
@@ -108,9 +108,9 @@ export async function processConsultarCdr(
     // Step 2: Call SUNAT getStatus
     console.log(`[consultar-cdr] Calling SUNAT getStatus for ticket ${ticket}`);
 
-    const environment: SunatEnvironment = process.env.SUNAT_ENVIRONMENT as SunatEnvironment || 'beta';
+    const environment: SunatEnvironment = (process.env.SUNAT_ENVIRONMENT as SunatEnvironment) || 'beta';
 
-    const sunatClient: SunatClient = createSunatClient(
+    const sunatClient = await createSunatClientForEnvironment(
       {
         username: tenant.sunatUsername,
         password: tenant.sunatPassword,

@@ -32,6 +32,10 @@ const DEFAULT_ENDPOINTS: Record<SunatEnvironment, SunatEndpointSet> = {
     soap: 'https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService?wsdl',
     rest: 'https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/',
   },
+  mock: {
+    soap: 'mock://localhost:8080/billService',
+    rest: 'mock://localhost:8080/',
+  },
 };
 
 /**

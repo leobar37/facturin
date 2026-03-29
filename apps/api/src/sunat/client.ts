@@ -451,3 +451,99 @@ export class SunatClient {
 export function createSunatClient(credentials: SunatCredentials, environment: SunatEnvironment = 'beta'): SunatClient {
   return new SunatClient(credentials, environment);
 }
+
+/**
+ * Mock SUNAT Client for testing and development
+ *
+ * Simulates SUNAT BillService behavior without making actual HTTP requests.
+ * Returns deterministic responses based on the environment mock mode:
+ * - 'mock': Always returns success with ticket (async mode)
+ */
+export class MockSunatClient {
+  /**
+   * Create a MockSunatClient - factory method for consistency with SunatClient
+   */
+  static async create(_credentials: SunatCredentials, _environment: SunatEnvironment = 'mock'): Promise<MockSunatClient> {
+    return new MockSunatClient();
+  }
+
+  /**
+   * Generate a mock ticket for async processing
+   */
+  private generateMockTicket(): string {
+    // Generate a 15-digit ticket similar to SUNAT's format
+    const timestamp = Date.now().toString().slice(-10);
+    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    return `${timestamp}${random}`.padStart(15, '0');
+  }
+
+  /**
+   * Mock sendBill - simulates SUNAT sendBill response
+   *
+   * In mock mode, always returns a ticket (async mode) to demonstrate
+   * the full flow including CDR consultation.
+   */
+  async sendBill(fileName: string, _xmlContent: string): Promise<SunatEnvioResult> {
+    console.log(`[MockSunatClient] sendBill called for file: ${fileName}`);
+
+    // Simulate network delay (optional, for more realistic testing)
+    // await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Always return success with a mock ticket (async mode)
+    const ticket = this.generateMockTicket();
+
+    console.log(`[MockSunatClient] Returning mock ticket: ${ticket}`);
+
+    return {
+      success: true,
+      ticket,
+      statusCode: 98, // EN_PROCESO - indicates async processing
+    };
+  }
+
+  /**
+   * Mock getStatus - simulates SUNAT getStatus response
+   *
+   * In mock mode, always returns success with status 0 (ACEPTADO)
+   * to simulate a successful document processing.
+   */
+  async getStatus(ticket: string): Promise<SunatStatusResult> {
+    console.log(`[MockSunatClient] getStatus called for ticket: ${ticket}`);
+
+    // Simulate network delay
+    // await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Always return accepted status in mock mode
+    console.log(`[MockSunatClient] Returning mock status: ACCEPTED for ticket ${ticket}`);
+
+    return {
+      success: true,
+      statusCode: 0, // ACEPTADO
+      status: 'ACEPTADO',
+      // Mock CDR content - in real scenario this would be the ZIP containing the CDR
+      xmlContent: Buffer.from(`<xml>Mock CDR for ticket ${ticket}</xml>`).toString('base64'),
+    };
+  }
+}
+
+/**
+ * Check if environment is mock mode
+ */
+export function isMockEnvironment(environment: SunatEnvironment): boolean {
+  return environment === 'mock';
+}
+
+/**
+ * Factory function that returns appropriate client based on environment
+ */
+export async function createSunatClientForEnvironment(
+  credentials: SunatCredentials,
+  environment: SunatEnvironment = 'beta'
+): Promise<SunatClient | MockSunatClient> {
+  if (isMockEnvironment(environment)) {
+    console.log('[SUNAT] Creating mock client for environment:', environment);
+    return MockSunatClient.create(credentials, environment);
+  }
+
+  return SunatClient.create(credentials, environment);
+}

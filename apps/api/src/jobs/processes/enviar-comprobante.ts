@@ -13,7 +13,7 @@
 
 import { generateXML } from '../../sunat/xml';
 import { signXML } from '../../sunat/xml';
-import { SunatClient } from '../../sunat/client';
+import { createSunatClientForEnvironment } from '../../sunat/client';
 import type {
   SunatEnvironment,
   ComprobanteSunatEstado,
@@ -160,9 +160,9 @@ export async function processEnviarComprobante(
     console.log(`[enviar-comprobante] Sending to SUNAT for comprobante ${comprobanteId}`);
 
     // Determine environment based on tenant or default to beta
-    const environment: SunatEnvironment = process.env.SUNAT_ENVIRONMENT as SunatEnvironment || 'beta';
+    const environment: SunatEnvironment = (process.env.SUNAT_ENVIRONMENT as SunatEnvironment) || 'beta';
 
-    const sunatClient = await SunatClient.create(
+    const sunatClient = await createSunatClientForEnvironment(
       {
         username: sunatCreds.username,
         password: sunatCreds.password,

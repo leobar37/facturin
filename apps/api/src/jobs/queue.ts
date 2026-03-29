@@ -8,6 +8,8 @@
  * Queue instances are created lazily via the getSunatSendQueue/getSunatConsultQueue functions.
  */
 
+import type { Queue as BullMQQueue, Job as BullMQJob } from 'bullmq';
+
 // Redis connection configuration
 // In production, use REDIS_URL env variable
 export const redisConnection = {
@@ -40,21 +42,21 @@ export interface ConsultarCdrJobData {
   attemptNumber?: number;
 }
 
-// Lazy-loaded queue instances (using any type until BullMQ is installed)
-let _sunatSendQueue: any = null;
-let _sunatConsultQueue: any = null;
+// Lazy-loaded queue instances with proper BullMQ Queue types
+let _sunatSendQueue: BullMQQueue<EnviarComprobanteJobData> | null = null;
+let _sunatConsultQueue: BullMQQueue<ConsultarCdrJobData> | null = null;
 
 /**
  * Get or create the SUNAT send queue instance
  */
-export async function getSunatSendQueue(): Promise<any> {
+export async function getSunatSendQueue(): Promise<BullMQQueue<EnviarComprobanteJobData>> {
   if (_sunatSendQueue) {
     return _sunatSendQueue;
   }
 
   // Dynamic import to handle case where BullMQ is not yet installed
   const { Queue } = await import('bullmq');
-  _sunatSendQueue = new Queue(QUEUE_NAMES.SUNAT_SEND, {
+  _sunatSendQueue = new Queue<EnviarComprobanteJobData>(QUEUE_NAMES.SUNAT_SEND, {
     connection: redisConnection,
     defaultJobOptions: {
       attempts: 3,
@@ -76,14 +78,14 @@ export async function getSunatSendQueue(): Promise<any> {
 /**
  * Get or create the SUNAT consult queue instance
  */
-export async function getSunatConsultQueue(): Promise<any> {
+export async function getSunatConsultQueue(): Promise<BullMQQueue<ConsultarCdrJobData>> {
   if (_sunatConsultQueue) {
     return _sunatConsultQueue;
   }
 
   // Dynamic import to handle case where BullMQ is not yet installed
   const { Queue } = await import('bullmq');
-  _sunatConsultQueue = new Queue(QUEUE_NAMES.SUNAT_CONSULT, {
+  _sunatConsultQueue = new Queue<ConsultarCdrJobData>(QUEUE_NAMES.SUNAT_CONSULT, {
     connection: redisConnection,
     defaultJobOptions: {
       attempts: 5,
@@ -108,7 +110,7 @@ export async function getSunatConsultQueue(): Promise<any> {
 export async function enqueueEnviarComprobante(
   comprobanteId: string,
   tenantId: string
-): Promise<any> {
+): Promise<BullMQJob<EnviarComprobanteJobData>> {
   const queue = await getSunatSendQueue();
   return queue.add('enviar-comprobante', {
     comprobanteId,
@@ -124,7 +126,7 @@ export async function enqueueConsultarCdr(
   tenantId: string,
   comprobanteId: string,
   delayMs?: number
-): Promise<any> {
+): Promise<BullMQJob<ConsultarCdrJobData>> {
   const queue = await getSunatConsultQueue();
   const jobOptions = delayMs ? { delay: delayMs } : undefined;
   return queue.add('consultar-cdr', {
