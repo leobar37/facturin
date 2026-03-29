@@ -1,7 +1,7 @@
-import { randomBytes, createCipheriv } from 'crypto';
 import { tenantsRepository, type TenantEntity } from '../repositories/tenants.repository';
 import { seriesRepository } from '../repositories/series.repository';
-import { ValidationError, ConflictError } from '../errors';
+import { ValidationError, ConflictError, NotFoundError } from '../errors';
+import { encrypt, decrypt } from '../lib/crypto';
 
 export interface ReadinessCheck {
   ready: boolean;
@@ -13,21 +13,12 @@ export interface ReadinessCheck {
   };
 }
 
-// Encryption key for certificate storage (in production, use proper key management)
-const ENCRYPTION_KEY = process.env.CERTIFICATE_ENCRYPTION_KEY || 'default-32-char-key-for-dev!!';
-const ENCRYPTION_IV_LENGTH = 16;
-const ENCRYPTION_ALGORITHM = 'aes-256-cbc';
-
 /**
- * Encrypt data using AES-256-CBC
+ * Encrypt data using AES-256-GCM
+ * @deprecated Use encrypt from '../lib/crypto' directly
  */
 function encryptData(data: string): string {
-  const iv = randomBytes(ENCRYPTION_IV_LENGTH);
-  const key = Buffer.from(ENCRYPTION_KEY.padEnd(32).slice(0, 32));
-  const cipher = createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
-  let encrypted = cipher.update(data, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+  return encrypt(data);
 }
 
 export interface CreateTenantInput {
@@ -90,7 +81,8 @@ export class TenantsService {
   }
 
   toSafeResponse(tenant: TenantEntity): TenantResponse {
-    const { certificadoDigital, sunatPassword, ...safeData } = tenant;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { certificadoDigital, certificadoPassword, sunatPassword, sunatUsername, ...safeData } = tenant;
     return {
       ...safeData,
       hasCertificado: !!certificadoDigital,
@@ -137,7 +129,7 @@ export class TenantsService {
     return tenantsRepository.findActiveById(id);
   }
 
-  async create(input: CreateTenantInput): Promise<TenantEntity> {
+  async create(input: CreateTenantInput): Promise<TenantResponse> {
     if (!this.validateRuc(input.ruc)) {
       throw new ValidationError('Invalid RUC format', 'INVALID_RUC');
     }
@@ -158,11 +150,13 @@ export class TenantsService {
       isActive: true,
     });
 
-    return tenant;
+    return this.toSafeResponse(tenant);
   }
 
-  async update(id: string, input: UpdateTenantInput): Promise<TenantEntity | null> {
-    return tenantsRepository.update(id, input);
+  async update(id: string, input: UpdateTenantInput): Promise<TenantResponse | null> {
+    const tenant = await tenantsRepository.update(id, input);
+    if (!tenant) return null;
+    return this.toSafeResponse(tenant);
   }
 
   async deactivate(id: string): Promise<{ id: string; isActive: boolean } | null> {
@@ -218,7 +212,7 @@ export class TenantsService {
     // Check if tenant exists
     const tenant = await tenantsRepository.findById(tenantId);
     if (!tenant) {
-      throw new ValidationError('Tenant not found', 'NOT_FOUND');
+      throw new NotFoundError('Tenant not found', 'NOT_FOUND');
     }
 
     // Decode the base64 certificate
@@ -320,7 +314,7 @@ export class TenantsService {
     // Check if tenant exists
     const tenant = await tenantsRepository.findById(tenantId);
     if (!tenant) {
-      throw new ValidationError('Tenant not found', 'NOT_FOUND');
+      throw new NotFoundError('Tenant not found', 'NOT_FOUND');
     }
 
     // Encrypt the password before storing
@@ -337,6 +331,45 @@ export class TenantsService {
       message: 'SUNAT credentials updated',
       hasCredentials: true,
     };
+  }
+
+  /**
+   * Get decrypted certificate and password for signing
+   * Returns null if no certificate is stored
+   */
+  async getDecryptedCertificate(tenantId: string): Promise<{ certificate: string; password: string } | null> {
+    const tenant = await tenantsRepository.findById(tenantId);
+    if (!tenant?.certificadoDigital || !tenant?.certificadoPassword) {
+      return null;
+    }
+
+    try {
+      const certificate = decrypt(tenant.certificadoDigital);
+      const password = decrypt(tenant.certificadoPassword);
+      return { certificate, password };
+    } catch (error) {
+      console.error('Failed to decrypt certificate:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get decrypted SUNAT credentials
+   * Returns null if no credentials are stored
+   */
+  async getDecryptedSunatCredentials(tenantId: string): Promise<{ username: string; password: string } | null> {
+    const tenant = await tenantsRepository.findById(tenantId);
+    if (!tenant?.sunatUsername || !tenant?.sunatPassword) {
+      return null;
+    }
+
+    try {
+      const password = decrypt(tenant.sunatPassword);
+      return { username: tenant.sunatUsername, password };
+    } catch (error) {
+      console.error('Failed to decrypt SUNAT credentials:', error);
+      return null;
+    }
   }
 
   /**

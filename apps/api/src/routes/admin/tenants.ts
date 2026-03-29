@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { t } from 'elysia';
 import { tenantsService } from '../../services';
-import { NotFoundError } from '../../errors';
+import { NotFoundError, ValidationError } from '../../errors';
 
 export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
   // List all tenants
@@ -170,18 +170,14 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
     }),
   })
   // Update SUNAT credentials for tenant
-  .put('/:id/sunat-credentials', async ({ params, body, set }) => {
+  .put('/:id/sunat-credentials', async ({ params, body }) => {
     const { id } = params;
     
     // Handle body parsing safely
     const data = body as Record<string, unknown> | undefined;
     
     if (!data) {
-      set.status = 400;
-      return {
-        error: 'SUNAT username and password are required',
-        code: 'SUNAT_CREDENTIALS_REQUIRED',
-      };
+      throw new ValidationError('SUNAT username and password are required', 'SUNAT_CREDENTIALS_REQUIRED');
     }
 
     const username = data.username as string | undefined;
@@ -189,21 +185,13 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
 
     // Validate required fields at route level with proper error messages
     if (!username || !password) {
-      set.status = 400;
-      return {
-        error: 'SUNAT username and password are required',
-        code: 'SUNAT_CREDENTIALS_REQUIRED',
-      };
+      throw new ValidationError('SUNAT username and password are required', 'SUNAT_CREDENTIALS_REQUIRED');
     }
 
     // Validate username format (6-20 alphanumeric characters)
     const usernameRegex = /^[A-Za-z0-9]{6,20}$/;
     if (!usernameRegex.test(username)) {
-      set.status = 400;
-      return {
-        error: 'Invalid SUNAT username format',
-        code: 'INVALID_SUNAT_USERNAME',
-      };
+      throw new ValidationError('Invalid SUNAT username format', 'INVALID_SUNAT_USERNAME');
     }
 
     const result = await tenantsService.updateSunatCredentials(
@@ -212,7 +200,11 @@ export const adminTenantsRoutes = new Elysia({ prefix: '/api/admin/tenants' })
       password
     );
 
-    return result;
+    return {
+      success: true,
+      message: result.message,
+      hasCredentials: result.hasCredentials,
+    };
   }, {
     params: t.Object({
       id: t.String({ format: 'uuid' }),
