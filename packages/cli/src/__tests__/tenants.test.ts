@@ -9,6 +9,8 @@ const TEST_CONFIG_PATH = join(TEST_CONFIG_DIR, '.facturin', 'config.json');
 
 describe('Tenant Commands', () => {
   const originalHome = process.env.HOME;
+  // Store original fetch to restore after tests
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     process.env.HOME = TEST_CONFIG_DIR;
@@ -29,6 +31,8 @@ describe('Tenant Commands', () => {
       rmSync(TEST_CONFIG_DIR, { recursive: true, force: true });
     }
 
+    // Restore original fetch
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 

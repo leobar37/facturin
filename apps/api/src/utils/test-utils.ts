@@ -3,7 +3,7 @@
  * Provides helpers to skip tests gracefully when API/DB is unavailable.
  */
 
-const API_BASE = process.env.API_BASE || 'http://localhost:3100';
+const API_BASE = process.env.API_BASE || 'http://localhost:3102';
 const API_HEALTH_URL = `${API_BASE}/api/health`;
 
 export { API_BASE };

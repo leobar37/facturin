@@ -168,6 +168,8 @@ describe('Config Management', () => {
 
 describe('Login/Logout Commands (VAL-CLI-001, VAL-CLI-002, VAL-CLI-003)', () => {
   const originalHome = process.env.HOME;
+  // Store original fetch to restore after tests
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     process.env.HOME = TEST_CONFIG_DIR;
@@ -184,6 +186,8 @@ describe('Login/Logout Commands (VAL-CLI-001, VAL-CLI-002, VAL-CLI-003)', () => 
       rmSync(TEST_CONFIG_DIR, { recursive: true, force: true });
     }
     
+    // Restore original fetch
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 

@@ -29,6 +29,8 @@ function createValidComprobanteJson(overrides: Record<string, unknown> = {}) {
 
 describe('Emit Commands', () => {
   const originalHome = process.env.HOME;
+  // Store original fetch to restore after tests
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     process.env.HOME = TEST_CONFIG_DIR;
@@ -52,6 +54,8 @@ describe('Emit Commands', () => {
       rmSync(TEST_CONFIG_DIR, { recursive: true, force: true });
     }
 
+    // Restore original fetch
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 
