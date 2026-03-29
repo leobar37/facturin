@@ -6,6 +6,8 @@ import { jwt } from '@elysiajs/jwt';
 import { authRoutes } from './routes/auth';
 import { adminApiKeysRoutes } from './routes/admin/api-keys';
 import { adminTenantsRoutes } from './routes/admin/tenants';
+import { adminStatsRoutes } from './routes/admin/stats';
+import { adminSettingsRoutes } from './routes/admin/settings';
 import { v1SeriesRoutes } from './routes/v1/series';
 import { v1TenantReadinessRoutes } from './routes/v1/tenant-readiness';
 import { v1ComprobantesRoutes } from './routes/v1/comprobantes';
@@ -51,6 +53,8 @@ const _app: any = new Elysia()
   .use(adminAuthMiddleware)
   .use(adminApiKeysRoutes)
   .use(adminTenantsRoutes)
+  .use(adminStatsRoutes)
+  .use(adminSettingsRoutes)
   // Protected v1 routes (require API Key)
   .use(authMiddleware)
   .use(v1SeriesRoutes)
