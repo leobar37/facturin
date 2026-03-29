@@ -22,7 +22,6 @@ export const redisConnection = {
 export const QUEUE_NAMES = {
   SUNAT_SEND: 'sunat-send',
   SUNAT_CONSULT: 'sunat-consult',
-  WEBHOOK: 'webhook',
 } as const;
 
 /**
@@ -41,21 +40,9 @@ export interface ConsultarCdrJobData {
   attemptNumber?: number;
 }
 
-export interface WebhookJobData {
-  webhookId: string;
-  event: string;
-  payload: {
-    event: string;
-    timestamp: string;
-    data: Record<string, unknown>;
-  };
-  attemptCount: number;
-}
-
 // Lazy-loaded queue instances (using any type until BullMQ is installed)
 let _sunatSendQueue: any = null;
 let _sunatConsultQueue: any = null;
-let _webhookQueue: any = null;
 
 /**
  * Get or create the SUNAT send queue instance
@@ -146,34 +133,3 @@ export async function enqueueConsultarCdr(
     comprobanteId,
   }, jobOptions);
 }
-
-/**
- * Get or create the webhook queue instance
- */
-export async function getWebhookQueue(): Promise<any> {
-  if (_webhookQueue) {
-    return _webhookQueue;
-  }
-
-  const { Queue } = await import('bullmq');
-  _webhookQueue = new Queue(QUEUE_NAMES.WEBHOOK, {
-    connection: redisConnection,
-    defaultJobOptions: {
-      attempts: 5,
-      backoff: {
-        type: 'exponential',
-        delay: 5000,
-      },
-      removeOnComplete: {
-        count: 100,
-      },
-      removeOnFail: {
-        count: 500,
-      },
-    },
-  });
-  return _webhookQueue;
-}
-
-// Export for use in webhooks service
-export { _webhookQueue as webhookQueue };

@@ -13,7 +13,7 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Tenants</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">0</p>
+            <p className="text-3xl font-bold text-gray-900">-</p>
           </CardContent>
         </Card>
 
@@ -22,7 +22,7 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">Comprobantes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">0</p>
+            <p className="text-3xl font-bold text-gray-900">-</p>
           </CardContent>
         </Card>
 
@@ -31,7 +31,7 @@ export function DashboardPage() {
             <CardTitle className="text-sm font-medium text-gray-500">API Keys</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gray-900">0</p>
+            <p className="text-3xl font-bold text-gray-900">-</p>
           </CardContent>
         </Card>
       </div>

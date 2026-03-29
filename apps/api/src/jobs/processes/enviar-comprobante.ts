@@ -23,6 +23,7 @@ import type {
 } from '../../sunat/types';
 import { comprobantesRepository } from '../../repositories/comprobantes.repository';
 import { tenantsRepository } from '../../repositories/tenants.repository';
+import { tenantsService } from '../../services/tenants.service';
 import { enqueueConsultarCdr } from '../queue';
 import type { EnviarComprobanteJobData } from '../queue';
 
@@ -72,7 +73,9 @@ export async function processEnviarComprobante(
     };
   }
 
-  if (!tenant.certificadoDigital || !tenant.certificadoPassword) {
+  // Get decrypted certificate and credentials
+  const certData = await tenantsService.getDecryptedCertificate(tenantId);
+  if (!certData) {
     console.error(`[enviar-comprobante] Tenant ${tenantId} missing certificate`);
     return {
       success: false,
@@ -83,7 +86,8 @@ export async function processEnviarComprobante(
     };
   }
 
-  if (!tenant.sunatUsername || !tenant.sunatPassword) {
+  const sunatCreds = await tenantsService.getDecryptedSunatCredentials(tenantId);
+  if (!sunatCreds) {
     console.error(`[enviar-comprobante] Tenant ${tenantId} missing SUNAT credentials`);
     return {
       success: false,
@@ -141,8 +145,8 @@ export async function processEnviarComprobante(
 
     const signerInput: XmlSignerInput = {
       xmlContent,
-      certificateBase64: tenant.certificadoDigital,
-      certificatePassword: tenant.certificadoPassword,
+      certificateBase64: certData.certificate,
+      certificatePassword: certData.password,
       signeriId: tenant.ruc,
     };
 
@@ -160,8 +164,8 @@ export async function processEnviarComprobante(
 
     const sunatClient = await SunatClient.create(
       {
-        username: tenant.sunatUsername,
-        password: tenant.sunatPassword,
+        username: sunatCreds.username,
+        password: sunatCreds.password,
       },
       environment
     );

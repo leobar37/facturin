@@ -6,11 +6,9 @@ import { jwt } from '@elysiajs/jwt';
 import { authRoutes } from './routes/auth';
 import { adminApiKeysRoutes } from './routes/admin/api-keys';
 import { adminTenantsRoutes } from './routes/admin/tenants';
-import { statsRoutes } from './routes/admin/stats';
 import { v1SeriesRoutes } from './routes/v1/series';
 import { v1TenantReadinessRoutes } from './routes/v1/tenant-readiness';
 import { v1ComprobantesRoutes } from './routes/v1/comprobantes';
-import { webhooksRoutes } from './routes/v1/webhooks';
 import { healthRoutes } from './routes/health';
 
 import { authMiddleware } from './middleware/auth';
@@ -53,13 +51,11 @@ const _app: any = new Elysia()
   .use(adminAuthMiddleware)
   .use(adminApiKeysRoutes)
   .use(adminTenantsRoutes)
-  .use(statsRoutes)
   // Protected v1 routes (require API Key)
   .use(authMiddleware)
   .use(v1SeriesRoutes)
   .use(v1TenantReadinessRoutes)
   .use(v1ComprobantesRoutes)
-  .use(webhooksRoutes)
   // Start server
   .listen(Number(process.env.PORT) || 3102, ({ hostname, port }) => {
     console.log(`🚀 Facturin API running at http://${hostname}:${port}`);
