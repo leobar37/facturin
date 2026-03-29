@@ -10,12 +10,13 @@ export interface AdminRequestContext {
  * Admin authentication middleware that requires JWT tokens.
  * - Rejects API Keys with 403
  * - Rejects missing or invalid JWT with 401
- * 
+ *
  * NOTE: This middleware expects the JWT plugin to be already applied to the app.
  * It uses the jwt from context which is provided by the @elysiajs/jwt plugin.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const adminAuthMiddleware = (app: any) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.onBeforeHandle(async ({ headers, path, store, jwt }: any) => {
     // Skip auth for public paths and v1 routes (v1 uses API Key auth, not JWT)
     const publicPaths = ['/api/health', '/api/auth/login', '/swagger', '/api/inngest', '/api/v1'];
