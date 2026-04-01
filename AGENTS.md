@@ -4,7 +4,13 @@
 
 Facturin es un sistema de **facturación electrónica SUNAT** open source para Perú.
 
-**Modelo de negocio:** Self-hosted SaaS multi-tenant donde el host se homologa como OSE (Operador de Servicios Electrónicos) y ofrece facturación a múltiples empresas/gimnasios.
+**Soporta dos modos de operación:**
+- **Modo Personal (Emisor Directo):** Un negocio despliega Facturin para emitir sus propias facturas directamente a SUNAT. Solo requiere RUC + certificado digital.
+- **Modo OSE (Multi-tenant):** Una empresa se homologa como OSE (Operador de Servicios Electrónicos) y ofrece facturación electrónica como servicio a múltiples empresas/negocios.
+
+Ambos modos usan la misma base de código, mismo XML (UBL 2.1), misma firma digital y mismos endpoints SUNAT. La diferencia es administrativa: 1 tenant vs N tenants.
+
+Ver: [`docs/modos-de-uso.md`](docs/modos-de-uso.md) para detalles completos.
 
 ## 🏗️ Arquitectura
 
@@ -271,7 +277,7 @@ docker-compose exec db psql -U facturin -c "SELECT * FROM comprobantes LIMIT 10;
 ## ❓ Preguntas Frecuentes
 
 **Q: ¿Cómo se diferencia Facturin de Nubefact?**
-A: Facturin es open source y self-hosted. El usuario hostea su propia instancia y se homologa como OSE. Nubefact es SaaS centralizado.
+A: Facturin es open source y self-hosted. Puedes usarlo para tu propio negocio (emisor directo) o como OSE para servir a múltiples empresas. Nubefact es SaaS centralizado.
 
 **Q: ¿Por qué no hay tabla de usuarios?**
 A: El diseño es intencionalmente simple: super admin vía ENV, y los tenants se conectan vía API Keys + SDK. No hay login por tenant.

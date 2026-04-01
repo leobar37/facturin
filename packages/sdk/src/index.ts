@@ -12,6 +12,15 @@ export type { AdminClientConfig, AdminCredentials, AuthToken } from './admin-cli
 export { StatsAPI } from './stats.js';
 export type { AdminStats } from './stats.js';
 
+// Export ApiKeysAPI
+export { ApiKeysAPI } from './api-keys.js';
+export type {
+  ApiKey,
+  CreateApiKeyInput,
+  CreateApiKeyResponse,
+  RevokeApiKeyResponse,
+} from './api-keys.js';
+
 // Export TenantsAPI and helpers
 export { TenantsAPI, validateRuc } from './tenants.js';
 export type { ListTenantsOptions, ListTenantsResult } from './tenants.js';

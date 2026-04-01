@@ -70,6 +70,255 @@ export async function listTenants(options: ListTenantsOptions = {}): Promise<voi
 }
 
 // ============================================================================
+// Tenant Get Command
+// ============================================================================
+
+export interface GetTenantOptions {
+  id: string;
+}
+
+export async function getTenant(options: GetTenantOptions): Promise<void> {
+  const client = requireAdminAuth();
+
+  if (!options.id) {
+    throw new CLIError('Tenant ID is required', 'MISSING_REQUIRED_FIELD');
+  }
+
+  console.log(`Fetching tenant ${options.id}...`);
+
+  try {
+    const tenant = await client.tenants.get(options.id);
+
+    console.log('\n' + '═'.repeat(60));
+    console.log('  🏢 TENANT DETAILS');
+    console.log('═'.repeat(60));
+
+    console.log(`\n  Información General`);
+    console.log(`  ──────────────────────────────────────────────`);
+    console.log(`  ID:               ${tenant.id}`);
+    console.log(`  RUC:              ${tenant.ruc}`);
+    console.log(`  Razón Social:     ${tenant.razonSocial}`);
+    if (tenant.nombreComercial) {
+      console.log(`  Nombre Comercial: ${tenant.nombreComercial}`);
+    }
+    console.log(`  Activo:           ${tenant.isActive ? 'Sí ✓' : 'No ✗'}`);
+
+    console.log(`\n  Contacto`);
+    console.log(`  ──────────────────────────────────────────────`);
+    if (tenant.direccion?.direccion) {
+      console.log(`  Dirección:        ${tenant.direccion.direccion}`);
+    }
+    if (tenant.contactoEmail) {
+      console.log(`  Email:            ${tenant.contactoEmail}`);
+    }
+    if (tenant.contactoPhone) {
+      console.log(`  Teléfono:         ${tenant.contactoPhone}`);
+    }
+
+    console.log(`\n  Configuración SUNAT`);
+    console.log(`  ──────────────────────────────────────────────`);
+    console.log(`  Certificado:      ${tenant.hasCertificate ? '✓ Instalado' : '✗ No instalado'}`);
+    console.log(`  Credenciales:     ${tenant.hasSunatCredentials ? '✓ Configuradas' : '✗ No configuradas'}`);
+
+    console.log(`\n  Límites`);
+    console.log(`  ──────────────────────────────────────────────`);
+    if (tenant.maxDocumentsPerMonth) {
+      console.log(`  Max docs/mes:     ${tenant.maxDocumentsPerMonth}`);
+    } else {
+      console.log(`  Max docs/mes:     Sin límite`);
+    }
+
+    console.log(`\n  Metadata`);
+    console.log(`  ──────────────────────────────────────────────`);
+    console.log(`  Creado:           ${formatDateTime(tenant.createdAt)}`);
+    console.log(`  Actualizado:      ${formatDateTime(tenant.updatedAt)}`);
+
+    console.log('\n' + '═'.repeat(60));
+  } catch (error) {
+    if (error instanceof CLIError) {
+      throw error;
+    }
+    if (error instanceof Error) {
+      if (error.message.includes('404')) {
+        throw new CLIError(
+          `Tenant not found: ${options.id}`,
+          'TENANT_NOT_FOUND'
+        );
+      }
+      throw new CLIError(
+        `Failed to get tenant: ${error.message}`,
+        'GET_TENANT_ERROR'
+      );
+    }
+    throw error;
+  }
+}
+
+// ============================================================================
+// Tenant Update Command
+// ============================================================================
+
+export interface UpdateTenantOptions {
+  id: string;
+  razonSocial?: string;
+  nombreComercial?: string;
+  direccion?: string;
+  email?: string;
+  phone?: string;
+  isActive?: boolean;
+  interactive?: boolean;
+}
+
+export async function updateTenant(options: UpdateTenantOptions): Promise<void> {
+  const client = requireAdminAuth();
+
+  if (!options.id) {
+    throw new CLIError('Tenant ID is required', 'MISSING_REQUIRED_FIELD');
+  }
+
+  console.log(`Fetching tenant ${options.id}...`);
+
+  try {
+    // Get current tenant data
+    const currentTenant = await client.tenants.get(options.id);
+
+    let updateData: {
+      razonSocial?: string;
+      nombreComercial?: string;
+      direccion?: { direccion: string };
+      contactoEmail?: string;
+      contactoPhone?: string;
+      isActive?: boolean;
+    };
+
+    if (options.interactive) {
+      updateData = await promptForTenantUpdateData(currentTenant);
+    } else {
+      // Build update data from flags
+      updateData = {};
+      if (options.razonSocial !== undefined) updateData.razonSocial = options.razonSocial;
+      if (options.nombreComercial !== undefined) updateData.nombreComercial = options.nombreComercial;
+      if (options.direccion !== undefined) updateData.direccion = options.direccion ? { direccion: options.direccion } : undefined;
+      if (options.email !== undefined) updateData.contactoEmail = options.email;
+      if (options.phone !== undefined) updateData.contactoPhone = options.phone;
+      if (options.isActive !== undefined) updateData.isActive = options.isActive;
+
+      if (Object.keys(updateData).length === 0) {
+        console.log('\nNo changes specified. Use --interactive or provide fields to update.');
+        return;
+      }
+    }
+
+    console.log('\nUpdating tenant...');
+
+    const tenant = await client.tenants.update(options.id, updateData);
+
+    console.log('\n✓ Tenant updated successfully!');
+    console.log(`  ID:               ${tenant.id}`);
+    console.log(`  RUC:              ${tenant.ruc}`);
+    console.log(`  Razón Social:     ${tenant.razonSocial}`);
+    if (tenant.nombreComercial) {
+      console.log(`  Nombre Comercial: ${tenant.nombreComercial}`);
+    }
+    console.log(`  Activo:           ${tenant.isActive ? 'Sí' : 'No'}`);
+  } catch (error) {
+    if (error instanceof CLIError) {
+      throw error;
+    }
+    if (error instanceof Error) {
+      if (error.message.includes('404')) {
+        throw new CLIError(
+          `Tenant not found: ${options.id}`,
+          'TENANT_NOT_FOUND'
+        );
+      }
+      throw new CLIError(
+        `Failed to update tenant: ${error.message}`,
+        'UPDATE_TENANT_ERROR'
+      );
+    }
+    throw error;
+  }
+}
+
+// ============================================================================
+// Interactive Mode - Prompt for update data
+// ============================================================================
+
+interface TenantUpdateData {
+  razonSocial?: string;
+  nombreComercial?: string;
+  direccion?: { direccion: string };
+  contactoEmail?: string;
+  contactoPhone?: string;
+}
+
+async function promptForTenantUpdateData(currentTenant: Tenant): Promise<TenantUpdateData> {
+  const rl = createReadline();
+
+  return new Promise((resolve) => {
+    const updateData: TenantUpdateData = {};
+
+    console.log('\nLeave empty to keep current value.\n');
+
+    const questions = [
+      {
+        key: 'razonSocial' as const,
+        prompt: 'Razón Social',
+        current: currentTenant.razonSocial,
+      },
+      {
+        key: 'nombreComercial' as const,
+        prompt: 'Nombre Comercial',
+        current: currentTenant.nombreComercial || '',
+      },
+      {
+        key: 'direccion' as const,
+        prompt: 'Dirección',
+        current: currentTenant.direccion?.direccion || '',
+        transform: (v: string) => v ? { direccion: v } : undefined,
+      },
+      {
+        key: 'contactoEmail' as const,
+        prompt: 'Email de contacto',
+        current: currentTenant.contactoEmail || '',
+      },
+      {
+        key: 'contactoPhone' as const,
+        prompt: 'Teléfono de contacto',
+        current: currentTenant.contactoPhone || '',
+      },
+    ];
+
+    let questionIndex = 0;
+
+    const askNext = () => {
+      if (questionIndex >= questions.length) {
+        rl.close();
+        resolve(updateData);
+        return;
+      }
+
+      const q = questions[questionIndex];
+      questionIndex++;
+
+      rl.question(`${q.prompt} [${q.current || 'empty'}]: `, (answer) => {
+        const trimmedAnswer = answer.trim();
+
+        if (trimmedAnswer) {
+          const value = q.transform ? q.transform(trimmedAnswer) : trimmedAnswer;
+          (updateData as Record<string, unknown>)[q.key] = value;
+        }
+
+        askNext();
+      });
+    };
+
+    askNext();
+  });
+}
+
+// ============================================================================
 // Tenant Create Command
 // ============================================================================
 
@@ -254,6 +503,17 @@ function createReadline(): readline.Interface {
 function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.substring(0, maxLength - 3) + '...';
+}
+
+function formatDateTime(date: Date | string): string {
+  const d = new Date(date);
+  return d.toLocaleString('es-PE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function formatTable(rows: string[][]): string {

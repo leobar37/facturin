@@ -1,6 +1,26 @@
 # Facturin
 
-Sistema de **facturación electrónica SUNAT** open source para Perú. Self-hosted SaaS multi-tenant donde el host se homologa como OSE (Operador de Servicios Electrónicos) y ofrece facturación a múltiples empresas.
+Sistema de **facturación electrónica SUNAT** open source para Perú. Soporta dos modos: **uso personal** (emisor directo para tu propio negocio) o **multi-tenant** (como OSE para servir a múltiples empresas).
+
+---
+
+## ¿Para quién es Facturin?
+
+### 🏪 Tengo un negocio y quiero emitir mis propias facturas
+
+Usa Facturin en **modo personal**. Despliega una instancia, crea un tenant para tu empresa, y emite facturas/boletas directamente a SUNAT. Sin intermediarios, sin mensualidades a terceros.
+
+**Necesitas:** RUC + certificado digital + servidor (VPS o Docker)
+
+→ [Guía completa: Modo Personal](docs/modos-de-uso.md#modo-personal-emisor-directo)
+
+### 🏢 Quiero ofrecer facturación a otras empresas (OSE)
+
+Usa Facturin en **modo multi-tenant**. Homológate como OSE ante SUNAT y ofrece facturación electrónica como servicio a múltiples empresas.
+
+**Necesitas:** Capital ≥ 300 UIT + requisitos legales SUNAT + servidor
+
+→ [Guía completa: Modo OSE](docs/modos-de-uso.md#modo-ose-multi-tenant)
 
 ---
 
@@ -116,13 +136,27 @@ docker-compose exec api bun run scripts/create-super-admin.ts
 
 Accede a:
 - API: `http://localhost:3100`
-- Web: `http://localhost:5173`
+- Web: `http://localhost:3101`
 
 ### Requisitos de Desarrollo
 
 - **Bun** 1.1+ o **Node.js** 20+
 - **PostgreSQL** 16 (o Docker)
 - **Docker** (opcional, para producción)
+
+## Inicio Rápido en Desarrollo
+
+```bash
+# Terminal 1 - API
+bun run dev:api
+
+# Terminal 2 - Web
+bun run dev:web
+```
+
+Accede a:
+- Web: `http://localhost:3101`
+- API: `http://localhost:3100`
 
 ## Instalación Local (Development)
 
@@ -134,12 +168,19 @@ bun install
 cp apps/api/.env.example apps/api/.env
 # Editar DATABASE_URL y JWT_SECRET
 
+# Configurar web
+cp apps/web/.env.example apps/web/.env
+# Editar VITE_API_URL si la API está en otra URL
+
 # Generar migrations
 bun run db:generate
 bun run db:migrate
 
-# Iniciar API
+# Iniciar API (terminal 1)
 bun run dev:api
+
+# Iniciar Web (terminal 2)
+bun run dev:web
 ```
 
 ## Configuración
@@ -247,6 +288,9 @@ bun test              # Tests
 
 ## Documentación
 
+- [`docs/modos-de-uso.md`](docs/modos-de-uso.md) — Modo Personal (emisor directo) vs Modo OSE (multi-tenant)
+- [`docs/tutorial-homologacion.md`](docs/tutorial-homologacion.md) — Proceso de homologación SUNAT: emisor directo vs OSE
+- [`docs/tutorial-negocio-facturacion.md`](docs/tutorial-negocio-facturacion.md) — Tutorial de negocio: facturas, boletas, regímenes tributarios
 - `sunat.html` — Documentación completa de integración SUNAT (arquitectura, flujos, códigos de error, catálogos)
 
 ## Recursos SUNAT

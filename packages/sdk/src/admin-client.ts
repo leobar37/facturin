@@ -4,6 +4,7 @@ import type {
 } from './types.js';
 import { TenantsAPI } from './tenants.js';
 import { StatsAPI } from './stats.js';
+import { ApiKeysAPI } from './api-keys.js';
 import {
   FacturinError,
   AuthenticationError,
@@ -113,6 +114,7 @@ export class AdminClient {
   private _token: string | null = null;
   public readonly tenants: TenantsAPI;
   public readonly stats: StatsAPI;
+  public readonly apiKeys: ApiKeysAPI;
 
   constructor(config: AdminClientConfig) {
     if (!config.baseUrl) {
@@ -122,6 +124,7 @@ export class AdminClient {
     this.baseUrl = config.baseUrl.replace(/\/$/, ''); // Remove trailing slash
     this.tenants = new TenantsAPI(this, true); // true = admin mode
     this.stats = new StatsAPI(this);
+    this.apiKeys = new ApiKeysAPI(this);
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {

@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --declaration --outDir dist && bun build src/index.ts --outdir=dist --target=bun --format=esm",
+    "build": "tsc --declaration --outDir dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "bun test"

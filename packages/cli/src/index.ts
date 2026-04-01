@@ -16,6 +16,20 @@ import {
   emitFactura,
   parseEmitCommand,
 } from './commands/emit.js';
+import {
+  listComprobantes,
+  getComprobante,
+  cancelComprobante,
+  parseComprobantesCommand,
+  printComprobantesHelp,
+} from './commands/comprobantes.js';
+import {
+  listApiKeys,
+  createApiKey,
+  revokeApiKey,
+  parseApiKeysCommand,
+  printApiKeysHelp,
+} from './commands/api-keys.js';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -54,6 +68,16 @@ async function main() {
       case 'emit': {
         const emitOptions = parseEmitCommand(args.slice(1));
         await emitFactura(emitOptions);
+        break;
+      }
+
+      case 'comprobantes': {
+        await handleComprobantesCommand(args.slice(1));
+        break;
+      }
+
+      case 'api-keys': {
+        await handleApiKeysCommand(args.slice(1));
         break;
       }
 
@@ -129,6 +153,50 @@ async function handleSeriesCommand(args: string[]): Promise<void> {
       break;
     case 'create':
       await createSeries(parsed.options);
+      break;
+  }
+}
+
+async function handleComprobantesCommand(args: string[]): Promise<void> {
+  // If no subcommand or --help, show help
+  if (!args[0] || args[0] === '--help' || args[0] === '-h') {
+    printComprobantesHelp();
+    return;
+  }
+
+  const parsed = parseComprobantesCommand(args);
+
+  switch (parsed.subcommand) {
+    case 'list':
+      await listComprobantes(parsed.options);
+      break;
+    case 'get':
+      await getComprobante(parsed.options);
+      break;
+    case 'cancel':
+      await cancelComprobante(parsed.options);
+      break;
+  }
+}
+
+async function handleApiKeysCommand(args: string[]): Promise<void> {
+  // If no subcommand or --help, show help
+  if (!args[0] || args[0] === '--help' || args[0] === '-h') {
+    printApiKeysHelp();
+    return;
+  }
+
+  const parsed = parseApiKeysCommand(args);
+
+  switch (parsed.subcommand) {
+    case 'list':
+      await listApiKeys();
+      break;
+    case 'create':
+      await createApiKey(parsed.options);
+      break;
+    case 'revoke':
+      await revokeApiKey(parsed.options);
       break;
   }
 }
@@ -247,6 +315,8 @@ Commands:
   tenants               Manage tenants (requires auth)
   series                Manage series (requires auth)
   emit                  Emit invoices/receipts (requires auth)
+  comprobantes          List, view, and cancel invoices (requires auth)
+  api-keys              Manage API keys (admin only)
 
 Options:
   -h, --help           Show this help message
