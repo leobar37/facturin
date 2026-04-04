@@ -1,3 +1,21 @@
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
+
+const envPath = join(import.meta.dir, '..', '.env.local');
+if (existsSync(envPath)) {
+  const envContent = readFileSync(envPath, 'utf-8');
+  envContent.split('\n').forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      const value = valueParts.join('=').trim();
+      if (key && value) {
+        process.env[key.trim()] = value;
+      }
+    }
+  });
+}
+
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
@@ -61,9 +79,32 @@ const _app: any = new Elysia()
   .use(v1TenantReadinessRoutes)
   .use(v1ComprobantesRoutes)
   // Start server
-  .listen(Number(process.env.PORT) || 3102, ({ hostname, port }) => {
+  .listen(Number(process.env.PORT) || 3102, async ({ hostname, port }) => {
     console.log(`🚀 Facturin API running at http://${hostname}:${port}`);
     console.log(`📚 Swagger docs at http://${hostname}:${port}/swagger`);
+
+    // Initialize BullMQ workers for background SUNAT job processing
+    try {
+      const { initializeWorkers } = await import('./jobs/index');
+      await initializeWorkers();
+      console.log('👷 BullMQ workers initialized');
+    } catch (error) {
+      console.warn('⚠️  BullMQ workers not available (Redis may not be running):', error instanceof Error ? error.message : error);
+    }
+
+    // Graceful shutdown
+    const shutdown = async () => {
+      console.log('\n🛑 Shutting down...');
+      try {
+        const { shutdownWorkers } = await import('./jobs/index');
+        await shutdownWorkers();
+      } catch {
+        // Workers may not have been initialized
+      }
+      process.exit(0);
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
   });
 
 export type App = typeof _app;

@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/index.ts",
+    "dev:mock": "bun run src/sunat/mock/server.ts",
     "start": "bun run src/index.ts",
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
@@ -19,8 +20,10 @@
     "@elysiajs/swagger": "^1.0.0",
     "bcrypt": "^5.1.1",
     "bullmq": "^5.71.1",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.33.0",
     "elysia": "^1.0.0",
+    "fast-xml-parser": "^5.5.10",
     "ioredis": "^5.10.1",
     "postgres": "^3.4.0",
     "zod": "^3.23.0"

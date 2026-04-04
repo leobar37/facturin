@@ -4,11 +4,14 @@ import bcrypt from 'bcrypt';
 import { jwt } from '@elysiajs/jwt';
 import { UnauthorizedError, AppError } from '../errors';
 
-const SUPER_ADMIN_EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@facturin.local';
-const SUPER_ADMIN_PASSWORD_HASH = process.env.SUPER_ADMIN_PASSWORD_HASH || '';
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
+const getEnvVars = () => ({
+  SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL || 'admin@facturin.local',
+  SUPER_ADMIN_PASSWORD_HASH: process.env.SUPER_ADMIN_PASSWORD_HASH || '',
+  JWT_SECRET: process.env.JWT_SECRET || 'development-secret-change-in-production',
+});
 
-// Configure JWT plugin separately to avoid type inference issues
+const { JWT_SECRET } = getEnvVars();
+
 const jwtPlugin = jwt({
   secret: JWT_SECRET,
   exp: '15m',
@@ -19,13 +22,12 @@ export const authRoutes: any = new Elysia({ prefix: '/api/auth' })
   .use(jwtPlugin)
   .post('/login', async ({ body, jwt: jwtPluginInstance }) => {
     const { email, password } = body as { email: string; password: string };
+    const { SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD_HASH } = getEnvVars();
 
-    // Validate credentials against ENV
     if (email !== SUPER_ADMIN_EMAIL) {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
-    // Verify password hash exists in ENV
     if (!SUPER_ADMIN_PASSWORD_HASH) {
       throw new AppError('Server misconfiguration', 'CONFIG_ERROR', 500);
     }
@@ -35,7 +37,6 @@ export const authRoutes: any = new Elysia({ prefix: '/api/auth' })
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
-    // Generate JWT
     const token = await jwtPluginInstance.sign({
       sub: 'super-admin',
       email: SUPER_ADMIN_EMAIL,
@@ -58,16 +59,14 @@ export const authRoutes: any = new Elysia({ prefix: '/api/auth' })
     }),
   })
   .get('/me', async () => {
-    // This would be called with JWT auth in real use
-    // For now, just return the structure
+    const { SUPER_ADMIN_EMAIL } = getEnvVars();
     return {
       email: SUPER_ADMIN_EMAIL,
       role: 'super-admin',
     };
   })
   .post('/refresh', async ({ jwt: jwtPluginInstance }) => {
-    // In a real implementation, this would verify the refresh token
-    // and issue a new access token
+    const { SUPER_ADMIN_EMAIL } = getEnvVars();
     const token = await jwtPluginInstance.sign({
       sub: 'super-admin',
       email: SUPER_ADMIN_EMAIL,

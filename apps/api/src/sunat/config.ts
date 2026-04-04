@@ -33,8 +33,8 @@ const DEFAULT_ENDPOINTS: Record<SunatEnvironment, SunatEndpointSet> = {
     rest: 'https://e-factura.sunat.gob.pe:443/ol-ti-itcpfegem/',
   },
   mock: {
-    soap: 'mock://localhost:8080/billService',
-    rest: 'mock://localhost:8080/',
+    soap: `http://localhost:${process.env.MOCK_SUNAT_PORT || '3099'}/billService`,
+    rest: `http://localhost:${process.env.MOCK_SUNAT_PORT || '3099'}/`,
   },
 };
 
